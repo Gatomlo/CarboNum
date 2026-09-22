@@ -34,37 +34,27 @@ Le serveur démarre sur `http://localhost:3000` (modifiable via la variable d'en
 
 #### Protéger le tableau de bord par mot de passe
 
-Le tableau de bord (statistiques et gestion des élèves) est protégé par un mot de passe unique. Deux façons de le configurer :
+Le tableau de bord (statistiques et gestion des élèves) est protégé par un mot de passe unique. **Rien à configurer sur le serveur** : à la toute première ouverture de `dashboard.html`, un écran invite à choisir ce mot de passe (8 caractères minimum). Il est stocké **haché** (scrypt, intégré à Node — pas de dépendance native) avec les données de classe elles-mêmes (`empreinte.json`), pas dans un fichier séparé à déployer. Il peut ensuite être changé à tout moment depuis le tableau de bord (carte « Changer le mot de passe »).
 
-**Option recommandée — mot de passe haché (`ADMIN_PASSWORD_HASH`)**
+⚠️ Tant que ce mot de passe n'a pas encore été défini, **n'importe qui connaissant l'URL du tableau de bord pourrait le définir à ta place** (premier arrivé, premier servi — il n'y a pas encore de compte à protéger). Fais-le donc dès que le déploiement est en ligne, avant de partager l'adresse du calculateur avec les élèves.
 
-Le mot de passe en clair ne touche alors jamais le disque : seul un hash (scrypt, intégré à Node — pas de dépendance native) est stocké. Génère-le avec l'outil fourni, en local :
+**Option avancée — variable d'environnement (secours en cas de perte d'accès)**
+
+Si tu préfères, ou si tu perds l'accès au tableau de bord, une variable d'environnement `ADMIN_PASSWORD_HASH` (ou, en clair, `ADMIN_PASSWORD`) reste prioritaire sur le mot de passe stocké — pratique pour reprendre la main sans toucher à `empreinte.json`. Pour générer un hash sans jamais écrire le mot de passe en clair sur disque :
 
 ```bash
 node hash-password.js
 ```
 
-Il demande le mot de passe en saisie masquée (rien ne s'affiche à l'écran, et il n'est écrit nulle part par l'outil), puis affiche une ligne à copier :
+Il demande le mot de passe en saisie masquée (rien ne s'affiche à l'écran), puis affiche une ligne à coller dans `.env` (en développement local, jamais commité, déjà dans `.gitignore`) ou dans les variables d'environnement du panneau de l'hébergeur (Render, Railway, Infomaniak…) :
 
 ```
 ADMIN_PASSWORD_HASH=scrypt$...$...
 ```
 
-Colle cette ligne dans ton fichier `.env` (en développement local, jamais commité, déjà dans `.gitignore`) ou dans les variables d'environnement du panneau de ton hébergeur (Render, Railway, Infomaniak…).
+Tant qu'une telle variable est définie, la carte « Changer le mot de passe » du tableau de bord est désactivée (elle n'aurait aucun effet) ; retire la variable pour reprendre la main depuis l'interface.
 
-**Option simple — mot de passe en clair (`ADMIN_PASSWORD`)**
-
-Toujours prise en charge, pour rester compatible avec les déploiements existants, mais le mot de passe est alors stocké en clair (dans `.env` ou les variables d'environnement de l'hébergeur) :
-
-```bash
-ADMIN_PASSWORD="un mot de passe" npm start
-```
-
-```
-ADMIN_PASSWORD=un mot de passe
-```
-
-Si les deux variables sont définies, `ADMIN_PASSWORD_HASH` est prioritaire. **Tant qu'aucune des deux n'est définie, la connexion est refusée** (échec explicite, pas de mot de passe par défaut). Une fois connecté·e, la session reste valide 12 h ou jusqu'à la déconnexion (bouton « Déconnexion » en haut du tableau de bord) ; un redémarrage du serveur déconnecte tout le monde, sans conséquence pour les données.
+Une fois connecté·e, la session reste valide 12 h ou jusqu'à la déconnexion (bouton « Déconnexion » en haut du tableau de bord) ; un redémarrage du serveur déconnecte tout le monde, sans conséquence pour les données.
 
 Sur la page du calculateur, un lien discret « Espace enseignant → » en bas de page mène au tableau de bord.
 

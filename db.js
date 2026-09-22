@@ -77,4 +77,28 @@ function deleteAll() {
   save();
 }
 
-module.exports = { upsertSubmission, getAll, setIncluded, deleteByClasse, deleteAll };
+// Mot de passe administrateur (haché, voir password-hash.js), stocké ici
+// pour que le tableau de bord soit utilisable sans rien configurer sur
+// le serveur (pas de fichier .env à déployer) : il est défini une
+// première fois depuis le tableau de bord lui-même (voir /api/admin/setup
+// dans server.js), puis modifiable depuis celui-ci. Une variable
+// d'environnement ADMIN_PASSWORD_HASH / ADMIN_PASSWORD reste possible et
+// est alors prioritaire (utile en secours si l'accès est perdu).
+function getAdminPasswordHash() {
+  return state.adminPasswordHash || null;
+}
+
+function setAdminPasswordHash(hash) {
+  state.adminPasswordHash = hash;
+  save();
+}
+
+module.exports = {
+  upsertSubmission,
+  getAll,
+  setIncluded,
+  deleteByClasse,
+  deleteAll,
+  getAdminPasswordHash,
+  setAdminPasswordHash,
+};

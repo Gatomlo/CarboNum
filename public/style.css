@@ -558,6 +558,11 @@ input[type="range"]::-moz-range-thumb {
 }
 .link-gen-copied { color: var(--good); font-size: .82rem; margin: 10px 0 0; font-weight: 600; }
 
+/* changer le mot de passe */
+
+#change-pw-form { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+#change-pw-form .field { width: 100%; max-width: 320px; }
+
 .link-gen-qr {
   margin-top: 16px;
   display: inline-block;

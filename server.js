@@ -19,7 +19,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const express = require("express");
 const db = require("./db");
-const { verifyPassword } = require("./password-hash");
+const { hashPassword, verifyPassword } = require("./password-hash");
 
 // Petit chargeur de .env local (facultatif) — évite une dépendance
 // externe (dotenv) pour un besoin de quelques variables seulement. Sur l'hébergement
@@ -54,11 +54,43 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // -------------------------------------------------------------------
 // Authentification de l'espace enseignant (tableau de bord + API de
-// statistiques). Un seul mot de passe partagé (ADMIN_PASSWORD), pas de
-// comptes individuels : c'est un outil pour une seule personne par
-// déploiement. Session en mémoire (pas de dépendance à express-session) :
-// un redémarrage du serveur déconnecte, ce qui est sans conséquence ici.
+// statistiques). Un seul mot de passe partagé, pas de comptes
+// individuels : c'est un outil pour une seule personne par déploiement.
+// Session en mémoire (pas de dépendance à express-session) : un
+// redémarrage du serveur déconnecte, ce qui est sans conséquence ici.
+//
+// Le mot de passe (haché, voir password-hash.js) est normalement stocké
+// avec les données de classe (db.js / empreinte.json) : défini une
+// première fois depuis le tableau de bord lui-même (POST
+// /api/admin/setup), pas besoin de configurer quoi que ce soit sur le
+// serveur. Si les variables d'environnement ADMIN_PASSWORD_HASH ou
+// ADMIN_PASSWORD sont définies, elles sont prioritaires sur la valeur
+// stockée — utile en secours si l'accès est perdu, sans avoir à toucher
+// au fichier de données.
 // -------------------------------------------------------------------
+
+// true dès qu'un mot de passe est configuré, par n'importe quelle voie.
+function isPasswordConfigured() {
+  return !!(process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD || db.getAdminPasswordHash());
+}
+
+// "env" si une variable d'environnement fait autorité (le mot de passe
+// stocké, s'il y en a un, est alors ignoré côté connexion — changer le
+// mot de passe depuis le tableau de bord n'aurait donc aucun effet tant
+// qu'elle reste définie) ; "db" si c'est la valeur stockée ; sinon null.
+function passwordSource() {
+  if (process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD) return "env";
+  if (db.getAdminPasswordHash()) return "db";
+  return null;
+}
+
+function checkPassword(password) {
+  if (!password) return false;
+  if (process.env.ADMIN_PASSWORD_HASH) return verifyPassword(password, process.env.ADMIN_PASSWORD_HASH);
+  if (process.env.ADMIN_PASSWORD) return safeCompare(password, process.env.ADMIN_PASSWORD);
+  const stored = db.getAdminPasswordHash();
+  return stored ? verifyPassword(password, stored) : false;
+}
 
 const SESSION_COOKIE = "admin_session";
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 h
@@ -117,31 +149,9 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-app.post("/api/admin/login", (req, res) => {
-  // ADMIN_PASSWORD_HASH (recommandé, voir hash-password.js : le mot de
-  // passe en clair ne touche alors jamais le disque) est préféré à
-  // ADMIN_PASSWORD (en clair, toujours accepté pour rester compatible
-  // avec les déploiements existants).
-  const configuredHash = process.env.ADMIN_PASSWORD_HASH;
-  const configuredPlain = process.env.ADMIN_PASSWORD;
-  if (!configuredHash && !configuredPlain) {
-    return res
-      .status(503)
-      .json({ error: "Mot de passe administrateur non configuré sur le serveur (variable ADMIN_PASSWORD_HASH ou ADMIN_PASSWORD, voir le README)." });
-  }
-
-  const ip = req.ip || req.socket.remoteAddress || "unknown";
-  if (isLockedOut(ip)) {
-    return res.status(429).json({ error: "Trop de tentatives. Réessaie dans quelques minutes." });
-  }
-
-  const password = req.body && typeof req.body.password === "string" ? req.body.password : "";
-  const valid = !!password && (configuredHash ? verifyPassword(password, configuredHash) : safeCompare(password, configuredPlain));
-  if (!valid) {
-    recordFailedAttempt(ip);
-    return res.status(401).json({ error: "Mot de passe incorrect." });
-  }
-
+// Ouvre une session admin (cookie) : factorisé, utilisé après une
+// connexion réussie comme après la définition initiale du mot de passe.
+function openAdminSession(req, res) {
   const token = crypto.randomBytes(24).toString("hex");
   sessions.set(token, Date.now() + SESSION_TTL_MS);
   res.cookie(SESSION_COOKIE, token, {
@@ -151,6 +161,25 @@ app.post("/api/admin/login", (req, res) => {
     maxAge: SESSION_TTL_MS,
     path: "/",
   });
+}
+
+app.post("/api/admin/login", (req, res) => {
+  if (!isPasswordConfigured()) {
+    return res.status(503).json({ error: "Aucun mot de passe n'est encore configuré : ouvre le tableau de bord pour en définir un." });
+  }
+
+  const ip = req.ip || req.socket.remoteAddress || "unknown";
+  if (isLockedOut(ip)) {
+    return res.status(429).json({ error: "Trop de tentatives. Réessaie dans quelques minutes." });
+  }
+
+  const password = req.body && typeof req.body.password === "string" ? req.body.password : "";
+  if (!checkPassword(password)) {
+    recordFailedAttempt(ip);
+    return res.status(401).json({ error: "Mot de passe incorrect." });
+  }
+
+  openAdminSession(req, res);
   res.json({ ok: true });
 });
 
@@ -163,7 +192,41 @@ app.post("/api/admin/logout", (req, res) => {
 
 app.get("/api/admin/session", (req, res) => {
   const token = parseCookies(req)[SESSION_COOKIE];
-  res.json({ authenticated: isValidSession(token) });
+  res.json({ authenticated: isValidSession(token), configured: isPasswordConfigured(), source: passwordSource() });
+});
+
+// Définit le mot de passe administrateur la toute première fois — sans
+// authentification préalable, puisque personne ne peut encore se
+// connecter. Volontairement à usage unique (refusé dès qu'un mot de
+// passe existe déjà, par n'importe quelle voie) : sinon n'importe qui
+// connaissant l'URL du tableau de bord pourrait s'approprier le compte.
+// Voir le README pour la fenêtre d'exposition que ça implique tant que
+// le mot de passe n'a pas encore été défini.
+app.post("/api/admin/setup", (req, res) => {
+  if (isPasswordConfigured()) {
+    return res.status(409).json({ error: "Un mot de passe est déjà configuré." });
+  }
+  const password = req.body && typeof req.body.password === "string" ? req.body.password : "";
+  if (password.length < 8) {
+    return res.status(400).json({ error: "Le mot de passe doit contenir au moins 8 caractères." });
+  }
+
+  db.setAdminPasswordHash(hashPassword(password));
+  openAdminSession(req, res);
+  res.json({ ok: true });
+});
+
+// Change le mot de passe stocké — nécessite une session valide. Sans
+// effet tant qu'une variable d'environnement fait autorité (voir
+// passwordSource ci-dessus) : la nouvelle valeur est bien enregistrée,
+// mais ignorée côté connexion tant que cette variable reste définie.
+app.post("/api/admin/change-password", requireAdmin, (req, res) => {
+  const password = req.body && typeof req.body.password === "string" ? req.body.password : "";
+  if (password.length < 8) {
+    return res.status(400).json({ error: "Le mot de passe doit contenir au moins 8 caractères." });
+  }
+  db.setAdminPasswordHash(hashPassword(password));
+  res.json({ ok: true, source: passwordSource() });
 });
 
 function isValidNumber(n) {

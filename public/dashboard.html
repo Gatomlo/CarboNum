@@ -35,6 +35,23 @@
     <p class="lead">Résultats agrégés et anonymes partagés par les élèves.</p>
   </div>
 
+  <div id="setup-state" class="card login-card" hidden>
+    <svg viewBox="0 0 48 48" aria-hidden="true" class="login-icon"><rect x="12" y="22" width="24" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M18 22v-6a6 6 0 0 1 12 0v6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="24" cy="30" r="2.5" fill="currentColor" stroke="none"/></svg>
+    <p class="login-intro">Bienvenue ! Choisis un mot de passe pour protéger le tableau de bord (8 caractères minimum). Il est stocké haché avec les données de classe — rien à configurer sur le serveur.</p>
+    <form id="setup-form">
+      <label class="field">
+        <span>Nouveau mot de passe</span>
+        <input type="password" id="setup-password" autocomplete="new-password" minlength="8" required>
+      </label>
+      <label class="field">
+        <span>Confirme le mot de passe</span>
+        <input type="password" id="setup-password-confirm" autocomplete="new-password" minlength="8" required>
+      </label>
+      <button class="btn btn-primary" type="submit">Définir le mot de passe</button>
+      <p class="identity-error" id="setup-error" hidden></p>
+    </form>
+  </div>
+
   <div id="login-state" class="card login-card" hidden>
     <svg viewBox="0 0 48 48" aria-hidden="true" class="login-icon"><rect x="12" y="22" width="24" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M18 22v-6a6 6 0 0 1 12 0v6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
     <p class="login-intro">Connexion requise pour accéder aux statistiques de la classe.</p>
@@ -76,6 +93,24 @@
       </div>
       <p class="link-gen-copied" id="link-gen-copied" hidden>✓ Lien copié !</p>
       <div class="link-gen-qr" id="link-gen-qr" hidden></div>
+    </div>
+
+    <div class="card no-print" id="change-pw-card">
+      <h2 class="card-title">Changer le mot de passe</h2>
+      <p class="card-hint" id="change-pw-hint">Le nouveau mot de passe s'applique à la prochaine connexion (la session en cours reste active).</p>
+      <form id="change-pw-form">
+        <label class="field">
+          <span>Nouveau mot de passe</span>
+          <input type="password" id="change-pw-new" autocomplete="new-password" minlength="8" required>
+        </label>
+        <label class="field">
+          <span>Confirme le mot de passe</span>
+          <input type="password" id="change-pw-confirm" autocomplete="new-password" minlength="8" required>
+        </label>
+        <button class="btn btn-ghost btn-sm" type="submit">Mettre à jour</button>
+        <p class="identity-error" id="change-pw-error" hidden></p>
+        <p class="link-gen-copied" id="change-pw-success" hidden>✓ Mot de passe mis à jour.</p>
+      </form>
     </div>
 
     <div id="loading-state" class="empty-state">

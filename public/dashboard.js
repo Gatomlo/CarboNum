@@ -1,12 +1,13 @@
 /* ===================================================================
    Empreinte Numérique — tableau de bord enseignant
-   Protégé par un mot de passe unique (ADMIN_PASSWORD côté serveur,
-   voir server.js) : l'écran de connexion s'affiche tant qu'aucune
-   session valide n'existe, et toutes les routes de données répondent
-   401 sans elle. Affiche ensuite les statistiques agrégées et
-   anonymes récupérées via l'API du serveur Node (server.js). N'a
-   aucun effet en hébergement statique (GitHub Pages…) : l'écran de
-   connexion l'indique dès la tentative de connexion.
+   Protégé par un mot de passe unique, stocké haché avec les données de
+   classe (voir server.js / db.js) : rien à configurer sur le serveur.
+   Écran "setup" tant qu'aucun mot de passe n'a encore été défini,
+   écran de connexion ensuite tant qu'aucune session valide n'existe —
+   toutes les routes de données répondent 401 sans elle. Affiche
+   ensuite les statistiques agrégées et anonymes récupérées via l'API
+   du serveur Node (server.js). N'a aucun effet en hébergement statique
+   (GitHub Pages…) : l'écran de connexion l'indique dès la tentative.
 
    Une classe peut être sélectionnée via le sélecteur ou l'URL
    (?classe=5B) ; sans sélection, les statistiques combinent toutes
@@ -33,7 +34,11 @@
   const resetBtn = document.getElementById("reset-btn");
 
   // ---- Connexion (mot de passe unique, session en mémoire côté serveur) ----
+  // Le mot de passe lui-même est normalement stocké avec les données de
+  // classe (voir server.js / db.js), défini la première fois via l'écran
+  // "setup-state" ci-dessous — pas de fichier à déployer sur le serveur.
 
+  const setupStateEl = document.getElementById("setup-state");
   const loginStateEl = document.getElementById("login-state");
   const appStateEl = document.getElementById("app-state");
   const loginForm = document.getElementById("login-form");
@@ -41,15 +46,34 @@
   const loginError = document.getElementById("login-error");
   const logoutBtn = document.getElementById("logout-btn");
 
+  const setupForm = document.getElementById("setup-form");
+  const setupPasswordInput = document.getElementById("setup-password");
+  const setupPasswordConfirmInput = document.getElementById("setup-password-confirm");
+  const setupError = document.getElementById("setup-error");
+
+  // "env" si une variable d'environnement du serveur fait autorité sur le
+  // mot de passe (voir server.js) : la carte "Changer le mot de passe"
+  // est alors désactivée, puisqu'elle n'aurait aucun effet.
+  let currentPasswordSource = null;
+
   function showApp() {
+    setupStateEl.hidden = true;
     loginStateEl.hidden = true;
     appStateEl.hidden = false;
     logoutBtn.hidden = false;
   }
 
   function showLogin() {
+    setupStateEl.hidden = true;
     appStateEl.hidden = true;
     loginStateEl.hidden = false;
+    logoutBtn.hidden = true;
+  }
+
+  function showSetup() {
+    appStateEl.hidden = true;
+    loginStateEl.hidden = true;
+    setupStateEl.hidden = false;
     logoutBtn.hidden = true;
   }
 
@@ -65,13 +89,13 @@
     return false;
   }
 
-  async function checkAuth() {
+  async function fetchSessionInfo() {
     try {
       const res = await fetch("api/admin/session");
-      if (!res.ok) return false;
-      return !!(await res.json()).authenticated;
+      if (!res.ok) return { authenticated: false, configured: true, source: null };
+      return await res.json();
     } catch (e) {
-      return false;
+      return { authenticated: false, configured: true, source: null };
     }
   }
 
@@ -94,12 +118,55 @@
         return;
       }
       adminPasswordInput.value = "";
+      currentPasswordSource = "db";
       showApp();
       init();
     } catch (e) {
       loginError.textContent =
         "Impossible de contacter le serveur. Ce tableau de bord nécessite que le site soit lancé avec le serveur Node inclus (voir le README).";
       loginError.hidden = false;
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  setupForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    setupError.hidden = true;
+
+    if (setupPasswordInput.value.length < 8) {
+      setupError.textContent = "Le mot de passe doit contenir au moins 8 caractères.";
+      setupError.hidden = false;
+      return;
+    }
+    if (setupPasswordInput.value !== setupPasswordConfirmInput.value) {
+      setupError.textContent = "Les deux mots de passe ne correspondent pas.";
+      setupError.hidden = false;
+      return;
+    }
+
+    const submitBtn = setupForm.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+    try {
+      const res = await fetch("api/admin/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: setupPasswordInput.value }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setupError.textContent = data.error || "Impossible de définir le mot de passe.";
+        setupError.hidden = false;
+        return;
+      }
+      setupPasswordInput.value = "";
+      setupPasswordConfirmInput.value = "";
+      currentPasswordSource = "db";
+      showApp();
+      init();
+    } catch (e) {
+      setupError.textContent = "Impossible de contacter le serveur.";
+      setupError.hidden = false;
     } finally {
       submitBtn.disabled = false;
     }
@@ -112,6 +179,71 @@
       /* pas grave : on repasse à l'écran de connexion de toute façon */
     }
     showLogin();
+  });
+
+  // ---- Changer le mot de passe (depuis le tableau de bord, une fois connecté·e) ----
+
+  const changePwCard = document.getElementById("change-pw-card");
+  const changePwHint = document.getElementById("change-pw-hint");
+  const changePwForm = document.getElementById("change-pw-form");
+  const changePwNewInput = document.getElementById("change-pw-new");
+  const changePwConfirmInput = document.getElementById("change-pw-confirm");
+  const changePwError = document.getElementById("change-pw-error");
+  const changePwSuccess = document.getElementById("change-pw-success");
+
+  function renderChangePasswordCard() {
+    if (currentPasswordSource === "env") {
+      changePwForm.hidden = true;
+      changePwHint.textContent =
+        "Le mot de passe est actuellement géré par une variable d'environnement du serveur (ADMIN_PASSWORD ou ADMIN_PASSWORD_HASH) : retire-la pour pouvoir le changer depuis ce tableau de bord.";
+    } else {
+      changePwForm.hidden = false;
+      changePwHint.textContent = "Le nouveau mot de passe s'applique à la prochaine connexion (la session en cours reste active).";
+    }
+  }
+
+  changePwForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    changePwError.hidden = true;
+    changePwSuccess.hidden = true;
+
+    if (changePwNewInput.value.length < 8) {
+      changePwError.textContent = "Le mot de passe doit contenir au moins 8 caractères.";
+      changePwError.hidden = false;
+      return;
+    }
+    if (changePwNewInput.value !== changePwConfirmInput.value) {
+      changePwError.textContent = "Les deux mots de passe ne correspondent pas.";
+      changePwError.hidden = false;
+      return;
+    }
+
+    const submitBtn = changePwForm.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+    try {
+      const res = await fetch("api/admin/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: changePwNewInput.value }),
+      });
+      if (redirectToLoginIfUnauthorized(res)) return;
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        changePwError.textContent = data.error || "Impossible de mettre à jour le mot de passe.";
+        changePwError.hidden = false;
+        return;
+      }
+      changePwNewInput.value = "";
+      changePwConfirmInput.value = "";
+      currentPasswordSource = data.source || currentPasswordSource;
+      renderChangePasswordCard();
+      changePwSuccess.hidden = false;
+    } catch (e) {
+      changePwError.textContent = "Impossible de contacter le serveur.";
+      changePwError.hidden = false;
+    } finally {
+      submitBtn.disabled = false;
+    }
   });
 
   function currentClasse() {
@@ -490,9 +622,15 @@
   })();
 
   (async function bootstrap() {
-    if (await checkAuth()) {
+    const session = await fetchSessionInfo();
+    currentPasswordSource = session.source || null;
+    renderChangePasswordCard();
+
+    if (session.authenticated) {
       showApp();
       init();
+    } else if (!session.configured) {
+      showSetup();
     } else {
       showLogin();
     }
