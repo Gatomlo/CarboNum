@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projection — Statistiques de Classe</title>
+<meta name="description" content="Vue simplifiée et actualisée automatiquement des statistiques de classe, pensée pour être projetée au tableau.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="proj-body">
+
+<main class="proj-main">
+
+  <div id="login-state" class="card login-card" hidden>
+    <svg viewBox="0 0 48 48" aria-hidden="true" class="login-icon"><rect x="12" y="22" width="24" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M18 22v-6a6 6 0 0 1 12 0v6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    <p class="login-intro">Connexion requise pour afficher les statistiques de la classe.</p>
+    <form id="login-form">
+      <label class="field">
+        <span>Mot de passe</span>
+        <input type="password" id="admin-password" autocomplete="current-password" required>
+      </label>
+      <button class="btn btn-primary" type="submit">Se connecter</button>
+      <p class="identity-error" id="login-error" hidden></p>
+    </form>
+  </div>
+
+  <div id="proj-state" hidden>
+    <header class="proj-header">
+      <span class="proj-title" id="proj-title">Toutes les classes</span>
+      <span class="proj-updated" id="proj-updated"></span>
+    </header>
+
+    <div id="proj-loading" class="empty-state">
+      <p>Chargement…</p>
+    </div>
+
+    <div id="proj-error" class="error-state" hidden>
+      <p>Impossible de récupérer les statistiques.</p>
+    </div>
+
+    <div id="proj-empty" class="empty-state" hidden>
+      <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 16v10M24 32h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <p>En attente des premières réponses…</p>
+    </div>
+
+    <div id="proj-content" hidden>
+      <div class="proj-stat-grid">
+        <div class="proj-stat-tile">
+          <p class="proj-stat-value" id="proj-count">–</p>
+          <p class="proj-stat-label">réponses</p>
+        </div>
+        <div class="proj-stat-tile">
+          <p class="proj-stat-value" id="proj-avg">–</p>
+          <p class="proj-stat-label">moyenne (kg CO<sub>2</sub>e/an)</p>
+        </div>
+        <div class="proj-stat-tile">
+          <p class="proj-stat-value" id="proj-min">–</p>
+          <p class="proj-stat-label">min (kg/an)</p>
+        </div>
+        <div class="proj-stat-tile">
+          <p class="proj-stat-value" id="proj-max">–</p>
+          <p class="proj-stat-label">max (kg/an)</p>
+        </div>
+      </div>
+
+      <div class="proj-panels">
+        <div class="card gauge-card proj-gauge-card">
+          <svg id="gauge-svg" viewBox="0 0 200 118" class="gauge proj-gauge">
+            <path id="gauge-band-good" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+            <path id="gauge-band-warn" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+            <path id="gauge-band-crit" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+            <g id="gauge-ref-marker"></g>
+            <line id="gauge-needle" x1="100" y1="100" x2="100" y2="30" class="gauge-needle"/>
+            <circle cx="100" cy="100" r="5" class="gauge-hub"/>
+          </svg>
+          <p class="gauge-ref-label">▲ Repère : profil de référence, ~229 kg CO<sub>2</sub>e/an</p>
+        </div>
+
+        <div class="card proj-chart-card">
+          <div id="proj-chart" class="breakdown-chart"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script src="shared.js"></script>
+<script src="projection.js"></script>
+</body>
+</html>

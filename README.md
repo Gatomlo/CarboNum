@@ -78,7 +78,11 @@ Quand une classe précise est affichée dans le tableau de bord, une carte **« 
 
 #### Créer un lien pour une classe
 
-En haut du tableau de bord, une carte **« Créer un lien pour une classe »** permet de saisir un code de classe et de générer directement le lien `?classe=...` prêt à copier (et à donner aux élèves), sans avoir à le construire à la main. Fonctionne aussi pour une classe qui n'a encore aucune réponse.
+En haut du tableau de bord, une carte **« Créer un lien pour une classe »** permet de saisir un code de classe et de générer directement le lien `?classe=...` prêt à copier (et à donner aux élèves), sans avoir à le construire à la main — accompagné d'un **QR code** (généré côté client, jamais transmis à un service externe) à projeter ou partager pour que les élèves accèdent au quiz en le scannant depuis leur téléphone. Fonctionne aussi pour une classe qui n'a encore aucune réponse.
+
+#### Mode projection
+
+Le bouton **« Mode projection »** (à côté du sélecteur de classe) ouvre `projection.html` dans un nouvel onglet : une vue simplifiée, en gros caractères, sans aucun contrôle d'administration, qui reprend la classe (ou la vue combinée) actuellement affichée et **s'actualise automatiquement** (toutes les 10 secondes) pendant que les élèves répondent — pratique à projeter au tableau en classe. Protégée par le même mot de passe que le reste du tableau de bord ; si le navigateur a déjà une session active, elle s'ouvre directement sans redemander la connexion.
 
 #### Exporter les données en CSV
 
@@ -126,11 +130,14 @@ Ils ne remplacent pas un bilan carbone individuel précis, mais permettent de co
 
 - `public/index.html` — structure du calculateur (accueil, questionnaire, résultats)
 - `public/dashboard.html` — tableau de bord des statistiques de classe (enseignant·e)
+- `public/projection.html` — vue simplifiée et auto-actualisée, pensée pour être projetée au tableau
 - `public/style.css` — mise en forme (thèmes clair/sombre automatiques)
 - `public/icon.svg`, `public/icon-512.png`, `public/manifest.json` — icône de l'app (favicon, PWA, et détectée automatiquement par node-gateway pour sa page d'accueil)
 - `public/shared.js` — constantes et helpers communs (facteurs de référence, jauge SVG, graphique de répartition, formatage)
+- `public/qrcode-lib.js` — bibliothèque tierce vendorisée ([qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) de Kazuhiko Arase, MIT), pour générer le QR code du lien de classe entièrement côté client
 - `public/script.js` — logique du calculateur (calcul, jauge, graphiques, transmission automatique du résultat)
-- `public/dashboard.js` — logique du tableau de bord (récupération et affichage des statistiques)
+- `public/dashboard.js` — logique du tableau de bord (récupération et affichage des statistiques, lien de classe, QR code, export CSV)
+- `public/projection.js` — logique du mode projection (connexion, actualisation automatique)
 - `server.js` — petit serveur Node.js + Express (statique + API des statistiques de classe), exporte l'app Express pour être montable derrière une passerelle
 - `db.js` — stockage JSON local (`empreinte.json`, créé à la racine, hors de `public/`), sans dépendance native
 - `package.json` — dépendances (`express` uniquement), `npm start` lance `server.js`

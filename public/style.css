@@ -558,6 +558,20 @@ input[type="range"]::-moz-range-thumb {
 }
 .link-gen-copied { color: var(--good); font-size: .82rem; margin: 10px 0 0; font-weight: 600; }
 
+.link-gen-qr {
+  margin-top: 16px;
+  display: inline-block;
+  background: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  line-height: 0;
+}
+.link-gen-qr svg { display: block; width: 132px; height: 132px; }
+
+/* mode projection (déclenché depuis le tableau de bord) */
+
+#projection-btn { margin-top: 14px; }
+
 .empty-state { text-align: center; color: var(--ink-2); padding-block: 40px; }
 .empty-state svg { width: 40px; height: 40px; color: var(--muted); margin-bottom: 12px; }
 
@@ -601,6 +615,43 @@ input[type="range"]::-moz-range-thumb {
   .teaser-row { gap: 8px; }
   .equiv-grid { grid-template-columns: 1fr; }
   .bar-row { grid-template-columns: 84px 1fr 56px; }
+}
+
+/* ---------------- mode projection ---------------- */
+
+.proj-body { font-size: 18px; }
+.proj-main { max-width: 1100px; margin: 0 auto; padding-block: 28px 40px; }
+
+.proj-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 26px;
+}
+.proj-title { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.6rem, 3.5vw, 2.2rem); }
+.proj-updated { color: var(--muted); font-size: .9rem; font-family: var(--font-mono); }
+
+.proj-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.proj-stat-tile {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 12px;
+  text-align: center;
+}
+.proj-stat-value { font-family: var(--font-mono); font-weight: 700; font-size: clamp(1.8rem, 5vw, 2.6rem); margin: 0; color: var(--accent); font-variant-numeric: tabular-nums; }
+.proj-stat-label { font-size: .95rem; color: var(--ink-2); margin: 6px 0 0; }
+
+.proj-panels { display: grid; grid-template-columns: 1fr 1.3fr; gap: 18px; align-items: start; }
+.proj-gauge-card { text-align: center; }
+.proj-gauge { max-width: 380px; }
+
+@media (max-width: 720px) {
+  .proj-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .proj-panels { grid-template-columns: 1fr; }
 }
 
 /* ---------------- impression ---------------- */

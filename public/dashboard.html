@@ -57,6 +57,7 @@
         </select>
       </label>
       <p class="context-line" id="scope-summary"></p>
+      <button class="btn btn-ghost btn-sm no-print" id="projection-btn" type="button">🖥️ Mode projection</button>
     </div>
 
     <div class="card link-gen-card no-print" id="link-gen-card">
@@ -74,6 +75,7 @@
         <button class="btn btn-ghost btn-sm" id="link-gen-copy" type="button">Copier</button>
       </div>
       <p class="link-gen-copied" id="link-gen-copied" hidden>✓ Lien copié !</p>
+      <div class="link-gen-qr" id="link-gen-qr" hidden></div>
     </div>
 
     <div id="loading-state" class="empty-state">
@@ -160,6 +162,7 @@
 </footer>
 
 <script src="shared.js"></script>
+<script src="qrcode-lib.js"></script>
 <script src="dashboard.js"></script>
 </body>
 </html>

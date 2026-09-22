@@ -126,6 +126,23 @@
   const linkGenUrlInput = document.getElementById("link-gen-url");
   const linkGenCopyBtn = document.getElementById("link-gen-copy");
   const linkGenCopiedMsg = document.getElementById("link-gen-copied");
+  const linkGenQr = document.getElementById("link-gen-qr");
+
+  // Rendu du QR code en SVG, entièrement côté client (bibliothèque
+  // vendorisée, voir qrcode-lib.js). Toujours en noir sur blanc, quel
+  // que soit le thème du site : un QR code themé (contraste réduit en
+  // thème sombre) risquerait de ne plus être lisible par un scanner.
+  function renderLinkQr(url) {
+    if (typeof qrcode !== "function") {
+      linkGenQr.hidden = true;
+      return;
+    }
+    const qr = qrcode(0, "M");
+    qr.addData(url);
+    qr.make();
+    linkGenQr.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 8, scalable: true });
+    linkGenQr.hidden = false;
+  }
 
   linkGenForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -133,6 +150,7 @@
     linkGenCopiedMsg.hidden = true;
     if (!classe) {
       linkGenOutput.hidden = true;
+      linkGenQr.hidden = true;
       return;
     }
     // dashboard.html et index.html sont toujours dans le même dossier,
@@ -142,6 +160,7 @@
     linkGenUrlInput.value = url.toString();
     linkGenOutput.hidden = false;
     linkGenUrlInput.select();
+    renderLinkQr(url.toString());
   });
 
   linkGenCopyBtn.addEventListener("click", async () => {
@@ -403,6 +422,15 @@
     } catch (e) {
       alert("Impossible de réinitialiser les données (serveur inaccessible).");
     }
+  });
+
+  // ---- Mode projection (vue simplifiée, actualisée automatiquement) ----
+
+  document.getElementById("projection-btn").addEventListener("click", () => {
+    const classe = currentClasse();
+    const url = new URL("projection.html", window.location.href);
+    if (classe) url.searchParams.set("classe", classe);
+    window.open(url.toString(), "_blank", "noopener");
   });
 
   // ---- Impression du rapport ----
