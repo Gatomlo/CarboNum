@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistiques de Classe</title>
+<meta name="description" content="Statistiques agrégées et anonymes des empreintes carbone numériques partagées par la classe.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M16 6 C 21 10, 21 22, 16 26 C 11 22, 11 10, 16 6 Z" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M6 16 H26" stroke="currentColor" stroke-width="2"/>
+    </svg>
+    <span>Empreinte Numérique</span>
+  </div>
+  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Changer de thème" title="Changer de thème">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4V2M12 22v-2M4 12H2M22 12h-2M5 5 3.6 3.6M20.4 20.4 19 19M19 5l1.4-1.4M3.6 20.4 5 19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+  </button>
+</header>
+
+<main>
+  <div class="hero" style="padding-block: 24px 8px;">
+    <p class="eyebrow">Espace enseignant</p>
+    <h1 style="font-size: clamp(1.5rem, 5vw, 2.1rem);">Statistiques de la classe</h1>
+    <p class="lead">Résultats agrégés et anonymes partagés par les élèves. Rafraîchis la page pour voir les dernières contributions.</p>
+  </div>
+
+  <div id="loading-state" class="empty-state">
+    <p>Chargement…</p>
+  </div>
+
+  <div id="empty-state" class="empty-state" hidden>
+    <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 16v10M24 32h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <p>Aucune donnée pour l'instant.<br>Demande à tes élèves de calculer leur empreinte et de cliquer sur « Partager mon résultat » à la fin.</p>
+  </div>
+
+  <div id="error-state" class="error-state" hidden>
+    <p>Impossible de récupérer les statistiques. Ce tableau de bord nécessite que le site soit lancé avec le serveur Node inclus (voir <code>server/README</code> ou le README du projet).</p>
+  </div>
+
+  <div id="results-block" class="results" hidden>
+
+    <div class="card">
+      <h2 class="card-title">Vue d'ensemble</h2>
+      <div class="stat-grid">
+        <div class="stat-tile">
+          <p class="stat-tile-value" id="stat-count">–</p>
+          <p class="stat-tile-label">réponses</p>
+        </div>
+        <div class="stat-tile">
+          <p class="stat-tile-value" id="stat-min">–</p>
+          <p class="stat-tile-label">empreinte minimale (kg/an)</p>
+        </div>
+        <div class="stat-tile">
+          <p class="stat-tile-value" id="stat-max">–</p>
+          <p class="stat-tile-label">empreinte maximale (kg/an)</p>
+        </div>
+        <div class="stat-tile">
+          <p class="stat-tile-value" id="stat-avg">–</p>
+          <p class="stat-tile-label">moyenne de classe (kg/an)</p>
+        </div>
+      </div>
+      <p class="context-line" id="avg-context" style="margin-top:14px;"></p>
+    </div>
+
+    <div class="card gauge-card">
+      <h2 class="card-title">La classe, en moyenne</h2>
+      <svg id="gauge-svg" viewBox="0 0 200 118" class="gauge">
+        <path id="gauge-band-good" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+        <path id="gauge-band-warn" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+        <path id="gauge-band-crit" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+        <g id="gauge-ref-marker"></g>
+        <line id="gauge-needle" x1="100" y1="100" x2="100" y2="30" class="gauge-needle"/>
+        <circle cx="100" cy="100" r="5" class="gauge-hub"/>
+      </svg>
+      <p class="gauge-ref-label">▲ Repère : empreinte numérique moyenne en France, environ 250 kg CO<sub>2</sub>e/an par personne</p>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Ce qui pèse le plus, en moyenne</h2>
+      <div id="dashboard-chart" class="breakdown-chart"></div>
+      <div class="dominant-callout">
+        <span class="swatch" id="dominant-swatch"></span>
+        <span id="dominant-text"></span>
+      </div>
+    </div>
+
+    <button class="btn btn-ghost" id="reset-btn" type="button">↺ Réinitialiser les données de la classe</button>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <p>Données agrégées et anonymes, à ordre de grandeur — outil pédagogique, non contractuel.</p>
+</footer>
+
+<script src="shared.js"></script>
+<script src="dashboard.js"></script>
+</body>
+</html>

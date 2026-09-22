@@ -48,7 +48,7 @@
       </div>
 
       <button class="btn btn-primary btn-lg" id="start-btn" type="button">Commencer le calcul →</button>
-      <p class="privacy-note">🔒 Rien n'est enregistré ni envoyé&nbsp;: tout le calcul se fait dans ton navigateur.</p>
+      <p class="privacy-note">🔒 Le calcul se fait entièrement dans ton navigateur. Rien n'est envoyé, sauf si tu choisis explicitement de partager ton résultat de façon anonyme à la fin.</p>
     </div>
   </section>
 
@@ -270,6 +270,13 @@
         <ul class="tip-list" id="tip-list"></ul>
       </div>
 
+      <div class="card share-card">
+        <h2 class="card-title">Contribuer aux statistiques de la classe</h2>
+        <p class="share-copy">Si ton enseignant·e a lancé le serveur de l'application, tu peux ajouter ton résultat aux statistiques du groupe. Seuls ton empreinte totale et sa répartition par usage sont envoyées&nbsp;: aucune information ne permet de t'identifier.</p>
+        <button class="btn btn-primary" id="share-btn" type="button">Partager mon résultat (anonyme)</button>
+        <p class="share-status" id="share-status" aria-live="polite"></p>
+      </div>
+
       <details class="methodology">
         <summary>Méthodologie &amp; sources</summary>
         <div class="methodology-body">
@@ -295,6 +302,7 @@
   <p>Outil pédagogique — usages du numérique à des fins de sensibilisation en classe. Chiffres à ordre de grandeur, non contractuels.</p>
 </footer>
 
+<script src="shared.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

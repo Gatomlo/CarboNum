@@ -6,6 +6,8 @@
 (function () {
   "use strict";
 
+  const { REFERENCE_MOYENNE_FR, CATEGORIES, CATEGORY_META, fmt, renderGaugeInto } = window.EmpreinteShared;
+
   // -------------------------------------------------------------
   // Facteurs d'émission (ordres de grandeur pédagogiques)
   // Sources : ADEME (Base Carbone, étude "Évaluation environnementale
@@ -45,19 +47,6 @@
     bouteilleG: 83, // g CO2e / bouteille plastique 0.5L (fabrication)
     refAvionKm: 1090, // Bruxelles - Barcelone, aller simple
     refVoitureKm: 310, // Bruxelles - Paris, aller simple
-  };
-
-  const REFERENCE_MOYENNE_FR = 250; // kg CO2e/an, ordre de grandeur ADEME/Arcep
-  const GAUGE_MAX = 600; // kg CO2e/an, échelle max affichée sur la jauge
-  const GAUGE_BANDS = [150, 350, GAUGE_MAX]; // bornes faible / moyen / élevé
-
-  const CATEGORY_META = {
-    smartphone: { label: "Smartphone", color: "var(--cat-smartphone)" },
-    tablette: { label: "Tablette", color: "var(--cat-tablette)" },
-    ordinateur: { label: "Ordinateur", color: "var(--cat-ordinateur)" },
-    objets: { label: "Objets connectés", color: "var(--cat-objets)" },
-    streaming: { label: "Streaming", color: "var(--cat-streaming)" },
-    ia: { label: "IA générative", color: "var(--cat-ia)" },
   };
 
   // -------------------------------------------------------------
@@ -248,64 +237,18 @@
     return result;
   }
 
-  // -------------------------------------------------------------
-  // Formatage
-  // -------------------------------------------------------------
-
-  const fmt = (n, decimals = 0) =>
-    n.toLocaleString("fr-FR", { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
-
-  // -------------------------------------------------------------
-  // Jauge (SVG semi-circulaire, géométrie calculée)
-  // -------------------------------------------------------------
-
-  function polarToCartesian(cx, cy, r, angleDeg) {
-    const a = (angleDeg * Math.PI) / 180;
-    return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
-  }
-
-  // angle 180° = extrémité gauche, 360°(=0°) = extrémité droite, passe par le haut (270°)
-  function describeArc(cx, cy, r, startAngle, endAngle) {
-    const start = polarToCartesian(cx, cy, r, startAngle);
-    const end = polarToCartesian(cx, cy, r, endAngle);
-    const largeArc = endAngle - startAngle <= 180 ? 0 : 1;
-    return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y}`;
-  }
-
-  function angleForValue(v) {
-    const p = Math.max(0, Math.min(1, v / GAUGE_MAX));
-    return 180 + p * 180;
-  }
-
   function renderGauge(total) {
-    const cx = 100;
-    const cy = 100;
-    const r = 80;
-
-    const bounds = [0, ...GAUGE_BANDS];
-    const bandEls = [
-      document.getElementById("gauge-band-good"),
-      document.getElementById("gauge-band-warn"),
-      document.getElementById("gauge-band-crit"),
-    ];
-    const bandColors = ["var(--good)", "var(--warn)", "var(--crit)"];
-
-    bandEls.forEach((el, i) => {
-      const a0 = angleForValue(bounds[i]);
-      const a1 = angleForValue(bounds[i + 1]);
-      el.setAttribute("d", describeArc(cx, cy, r, a0, a1));
-      el.style.stroke = bandColors[i];
-    });
-
-    const needleAngle = angleForValue(total);
-    const needle = document.getElementById("gauge-needle");
-    needle.setAttribute("transform", `rotate(${needleAngle - 270} ${cx} ${cy})`);
-
-    const refAngle = angleForValue(REFERENCE_MOYENNE_FR);
-    const refOuter = polarToCartesian(cx, cy, r + 11, refAngle);
-    const refInner = polarToCartesian(cx, cy, r - 11, refAngle);
-    const refGroup = document.getElementById("gauge-ref-marker");
-    refGroup.innerHTML = `<line x1="${refInner.x}" y1="${refInner.y}" x2="${refOuter.x}" y2="${refOuter.y}" stroke="var(--ink-2)" stroke-width="2.5" stroke-linecap="round"/>`;
+    renderGaugeInto(
+      {
+        bandGood: document.getElementById("gauge-band-good"),
+        bandWarn: document.getElementById("gauge-band-warn"),
+        bandCrit: document.getElementById("gauge-band-crit"),
+        needle: document.getElementById("gauge-needle"),
+        refMarker: document.getElementById("gauge-ref-marker"),
+      },
+      total,
+      REFERENCE_MOYENNE_FR
+    );
   }
 
   // -------------------------------------------------------------
@@ -380,9 +323,13 @@
   // Rendu final des résultats
   // -------------------------------------------------------------
 
+  let lastResult = null;
+
   function computeAndRenderResults() {
     const data = readForm();
     const result = calculate(data);
+    lastResult = result;
+    resetShareUI();
 
     document.getElementById("result-total").textContent = fmt(result.total, 0);
 
@@ -425,6 +372,48 @@
     document.getElementById("eq-bouteilles-sub").textContent =
       nbBouteilles >= 6 ? `≈ ${fmt(nbBouteilles / 6, 0)} packs de 6 bouteilles` : "";
   }
+
+  // -------------------------------------------------------------
+  // Partage anonyme vers les statistiques de la classe
+  // N'envoie rien tant que l'élève n'a pas cliqué explicitement.
+  // Ne fonctionne que si le site est servi par le petit serveur Node
+  // fourni (server/) ; échoue silencieusement (avec message) sinon.
+  // -------------------------------------------------------------
+
+  const shareBtn = document.getElementById("share-btn");
+  const shareStatus = document.getElementById("share-status");
+
+  function resetShareUI() {
+    shareBtn.disabled = false;
+    shareBtn.textContent = "Partager mon résultat (anonyme)";
+    shareStatus.innerHTML = "";
+  }
+
+  shareBtn.addEventListener("click", async () => {
+    if (!lastResult) return;
+    shareBtn.disabled = true;
+    shareStatus.textContent = "Envoi…";
+
+    const payload = { total: lastResult.total };
+    CATEGORIES.forEach((c) => {
+      payload[c] = lastResult[c];
+    });
+
+    try {
+      const res = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("bad status");
+      shareBtn.textContent = "✓ Résultat partagé";
+      shareStatus.innerHTML = 'Merci ! Ton résultat anonyme a été ajouté aux statistiques de la classe. <a href="dashboard.html">Voir les statistiques →</a>';
+    } catch (e) {
+      shareBtn.disabled = false;
+      shareStatus.textContent =
+        "Impossible de contacter le serveur de la classe. Cette fonctionnalité nécessite que le site soit lancé avec le serveur inclus (voir README).";
+    }
+  });
 
   // -------------------------------------------------------------
   // Thème clair / sombre (préférence mémorisée localement)

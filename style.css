@@ -73,6 +73,8 @@
 
 * { box-sizing: border-box; }
 
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   background: var(--bg);
@@ -405,6 +407,41 @@ input[type="range"]::-moz-range-thumb {
 
 .tip-main { font-weight: 600; margin: 0 0 12px; }
 .tip-list { margin: 0; padding-left: 20px; color: var(--ink-2); font-size: .92rem; display: flex; flex-direction: column; gap: 8px; }
+
+/* share */
+
+.share-card { background: var(--accent-soft); border-color: transparent; }
+.share-copy { color: var(--ink-2); font-size: .9rem; margin: 0 0 16px; max-width: 56ch; }
+.share-status { font-size: .85rem; color: var(--ink-2); margin: 12px 0 0; min-height: 1.2em; }
+.share-status a { color: var(--accent); font-weight: 600; }
+
+/* dashboard */
+
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.stat-tile { background: var(--surface-2); border-radius: 12px; padding: 16px 10px; text-align: center; }
+.stat-tile-value { font-family: var(--font-mono); font-weight: 700; font-size: 1.4rem; margin: 0; font-variant-numeric: tabular-nums; color: var(--accent); }
+.stat-tile-label { font-size: .74rem; color: var(--ink-2); margin: 4px 0 0; }
+
+.dominant-callout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 14px;
+  font-size: .92rem;
+}
+.dominant-callout .swatch { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+
+.empty-state { text-align: center; color: var(--ink-2); padding-block: 40px; }
+.empty-state svg { width: 40px; height: 40px; color: var(--muted); margin-bottom: 12px; }
+
+.error-state { text-align: center; color: var(--crit); padding-block: 24px; font-size: .92rem; }
+
+@media (max-width: 480px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
 
 /* methodology */
 
