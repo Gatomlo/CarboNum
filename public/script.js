@@ -208,6 +208,10 @@
     showScreen("hero");
   });
 
+  document.getElementById("print-btn").addEventListener("click", () => {
+    window.print();
+  });
+
   // -------------------------------------------------------------
   // Champs à valeur affichée en direct (range -> output)
   // -------------------------------------------------------------
@@ -447,6 +451,13 @@
     lastResult = result;
 
     document.getElementById("result-total").textContent = fmt(result.total, 0);
+
+    const printIdentityParts = [];
+    if (CLASSE) printIdentityParts.push(`Classe ${CLASSE}`);
+    if (ELEVE) printIdentityParts.push(`Pseudo ${ELEVE}`);
+    document.getElementById("print-identity").textContent = printIdentityParts.length
+      ? printIdentityParts.join(" — ")
+      : "";
 
     const diffPct = ((result.total - REFERENCE_MOYENNE_BE) / REFERENCE_MOYENNE_BE) * 100;
     const contextEl = document.getElementById("result-context");

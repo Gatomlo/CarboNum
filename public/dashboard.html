@@ -20,7 +20,7 @@
     </svg>
     <span>Empreinte Numérique</span>
   </div>
-  <div class="topbar-actions">
+  <div class="topbar-actions no-print">
     <button id="logout-btn" class="btn btn-ghost btn-sm" type="button" hidden>Déconnexion</button>
     <button id="theme-toggle" class="icon-btn" type="button" aria-label="Changer de thème" title="Changer de thème">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4V2M12 22v-2M4 12H2M22 12h-2M5 5 3.6 3.6M20.4 20.4 19 19M19 5l1.4-1.4M3.6 20.4 5 19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
@@ -50,13 +50,30 @@
 
   <div id="app-state" hidden>
     <div class="hero" style="padding-block: 0 8px;">
-      <label class="field class-select-field">
+      <label class="field class-select-field no-print">
         <span>Classe affichée</span>
         <select id="class-select">
           <option value="">Toutes les classes (combiné)</option>
         </select>
       </label>
       <p class="context-line" id="scope-summary"></p>
+    </div>
+
+    <div class="card link-gen-card no-print" id="link-gen-card">
+      <h2 class="card-title">Créer un lien pour une classe</h2>
+      <p class="card-hint">Indique un code de classe pour générer le lien à donner à tes élèves.</p>
+      <form class="link-gen-row" id="link-gen-form">
+        <label class="field">
+          <span>Code de la classe</span>
+          <input type="text" id="link-gen-classe" maxlength="60" placeholder="ex. 5B" autocomplete="off" required>
+        </label>
+        <button class="btn btn-primary btn-sm" type="submit">Générer</button>
+      </form>
+      <div class="link-gen-output" id="link-gen-output" hidden>
+        <input type="text" id="link-gen-url" readonly aria-label="Lien à partager">
+        <button class="btn btn-ghost btn-sm" id="link-gen-copy" type="button">Copier</button>
+      </div>
+      <p class="link-gen-copied" id="link-gen-copied" hidden>✓ Lien copié !</p>
     </div>
 
     <div id="loading-state" class="empty-state">
@@ -75,6 +92,10 @@
     </div>
 
     <div id="stats-cards" hidden>
+      <div class="report-actions no-print">
+        <button class="btn btn-ghost btn-sm" id="dashboard-print-btn" type="button">🖨️ Imprimer ce rapport</button>
+        <button class="btn btn-ghost btn-sm" id="export-csv-btn" type="button">⬇ Exporter en CSV</button>
+      </div>
       <div class="card">
         <h2 class="card-title">Vue d'ensemble</h2>
         <div class="stat-grid">
@@ -122,13 +143,13 @@
       </div>
     </div>
 
-    <div class="card" id="manage-card" hidden>
+    <div class="card no-print" id="manage-card" hidden>
       <h2 class="card-title">Gérer les élèves de cette classe</h2>
       <p class="card-hint">Décoche un·e élève pour exclure sa réponse du calcul des statistiques (utile pour un test ou une réponse manifestement erronée). Son entrée reste enregistrée, juste ignorée dans les chiffres ci-dessus.</p>
       <div id="manage-list" class="manage-list"></div>
     </div>
 
-    <button class="btn btn-ghost" id="reset-btn" type="button">↺ Réinitialiser les données de la classe</button>
+    <button class="btn btn-ghost no-print" id="reset-btn" type="button">↺ Réinitialiser les données de la classe</button>
     </div>
   </div>
 

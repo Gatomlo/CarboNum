@@ -283,6 +283,42 @@ app.delete("/api/submissions", requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+function csvField(value) {
+  const s = value === undefined || value === null ? "" : String(value);
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+// Réduit une classe (texte libre saisi par un élève) à un nom de fichier
+// sûr : la valeur traverse Content-Disposition, donc jamais de guillemets,
+// de retours à la ligne ou d'autres caractères qui y auraient un sens.
+function safeFilenamePart(s) {
+  const cleaned = String(s || "")
+    .normalize("NFKD")
+    .replace(/[^\w-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  return cleaned || "classe";
+}
+
+// Export CSV des réponses d'une classe (?classe=...) ou de toutes les
+// classes, pour archiver ou comparer les données avant une réinitialisation.
+app.get("/api/export.csv", requireAdmin, (req, res) => {
+  const classe = sanitizeLabel(req.query.classe || "");
+  const rows = db.getAll().filter((r) => !classe || r.classe === classe);
+
+  const header = ["classe", "eleve", "inclus", "total_kg", ...CATEGORIES, "date"];
+  const lines = [header.map(csvField).join(",")];
+  for (const r of rows) {
+    const line = [r.classe || "", r.eleve || "", r.included ? "oui" : "non", r.total, ...CATEGORIES.map((c) => r[c]), r.created_at || ""];
+    lines.push(line.map(csvField).join(","));
+  }
+
+  const filename = `empreinte-${classe ? safeFilenamePart(classe) : "toutes-classes"}.csv`;
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  res.send(`﻿${lines.join("\r\n")}`);
+});
+
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {

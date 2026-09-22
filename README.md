@@ -76,6 +76,19 @@ Une classe apparue une fois dans ce sélecteur n'en disparaît **jamais** d'elle
 
 Quand une classe précise est affichée dans le tableau de bord, une carte **« Gérer les élèves de cette classe »** liste chaque réponse par pseudo avec une case à cocher. Décocher un·e élève exclut sa réponse du calcul (compte, min/max/moyenne, répartition) sans la supprimer — utile pour une réponse test ou manifestement erronée. Elle peut être recochée à tout moment. Cette exclusion s'applique aussi à la vue combinée « Toutes les classes ».
 
+#### Créer un lien pour une classe
+
+En haut du tableau de bord, une carte **« Créer un lien pour une classe »** permet de saisir un code de classe et de générer directement le lien `?classe=...` prêt à copier (et à donner aux élèves), sans avoir à le construire à la main. Fonctionne aussi pour une classe qui n'a encore aucune réponse.
+
+#### Exporter les données en CSV
+
+Une fois une classe (ou la vue combinée) affichée, le bouton **« Exporter en CSV »** télécharge les réponses correspondantes (classe, pseudo, inclusion, total et répartition par poste, date) dans un fichier `.csv` — pratique pour archiver avant une réinitialisation ou comparer d'une année sur l'autre.
+
+#### Imprimer un résultat ou un rapport de classe
+
+- Sur l'écran de résultats du calculateur, le bouton **« Imprimer mes résultats »** ouvre la boîte de dialogue d'impression du navigateur avec une mise en page épurée (sans menu ni formulaire) prête à imprimer ou enregistrer en PDF.
+- Dans le tableau de bord, le bouton **« Imprimer ce rapport »** fait de même pour la classe (ou la vue combinée) actuellement affichée.
+
 #### Déploiement derrière une passerelle (hébergement mutualisé)
 
 Sur un hébergement qui n'autorise qu'une seule application Node.js (ex. Infomaniak), le dépôt entier est conçu pour être déposé tel quel dans le dossier `apps/<nom>` d'une passerelle comme [node-gateway](https://github.com/Gatomlo/node-gateway), qui monte alors l'app sur `/<nom>` :

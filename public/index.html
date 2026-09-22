@@ -12,7 +12,7 @@
 </head>
 <body>
 
-<header class="topbar">
+<header class="topbar no-print">
   <div class="brand">
     <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
       <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -288,6 +288,7 @@
 
       <div class="result-hero">
         <p class="eyebrow">Ton empreinte carbone numérique</p>
+        <p class="print-identity" id="print-identity"></p>
         <p class="big-number"><span id="result-total">0</span><span class="unit">kg CO<sub>2</sub>e / an</span></p>
         <p class="context-line" id="result-context"></p>
       </div>
@@ -351,7 +352,7 @@
         <ul class="tip-list" id="tip-list"></ul>
       </div>
 
-      <p class="auto-share-note" id="share-status" aria-live="polite"></p>
+      <p class="auto-share-note no-print" id="share-status" aria-live="polite"></p>
 
       <details class="methodology">
         <summary>Méthodologie &amp; sources</summary>
@@ -370,13 +371,16 @@
         </div>
       </details>
 
-      <button class="btn btn-ghost" id="restart-btn" type="button">↺ Recommencer</button>
+      <div class="results-actions no-print">
+        <button class="btn btn-ghost" id="print-btn" type="button">🖨️ Imprimer mes résultats</button>
+        <button class="btn btn-ghost" id="restart-btn" type="button">↺ Recommencer</button>
+      </div>
     </div>
   </section>
 
 </main>
 
-<footer class="site-footer">
+<footer class="site-footer no-print">
   <p>Outil pédagogique — usages du numérique à des fins de sensibilisation en classe. Chiffres à ordre de grandeur, non contractuels.</p>
   <p><a class="admin-link" href="dashboard.html">Espace enseignant →</a></p>
 </footer>

@@ -118,6 +118,47 @@
     return classSelect.value || "";
   }
 
+  // ---- Générateur de lien de classe ----
+
+  const linkGenForm = document.getElementById("link-gen-form");
+  const linkGenClasseInput = document.getElementById("link-gen-classe");
+  const linkGenOutput = document.getElementById("link-gen-output");
+  const linkGenUrlInput = document.getElementById("link-gen-url");
+  const linkGenCopyBtn = document.getElementById("link-gen-copy");
+  const linkGenCopiedMsg = document.getElementById("link-gen-copied");
+
+  linkGenForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const classe = linkGenClasseInput.value.trim();
+    linkGenCopiedMsg.hidden = true;
+    if (!classe) {
+      linkGenOutput.hidden = true;
+      return;
+    }
+    // dashboard.html et index.html sont toujours dans le même dossier,
+    // que l'app soit servie à la racine ou sous une passerelle.
+    const url = new URL("index.html", window.location.href);
+    url.searchParams.set("classe", classe);
+    linkGenUrlInput.value = url.toString();
+    linkGenOutput.hidden = false;
+    linkGenUrlInput.select();
+  });
+
+  linkGenCopyBtn.addEventListener("click", async () => {
+    linkGenUrlInput.select();
+    try {
+      await navigator.clipboard.writeText(linkGenUrlInput.value);
+      linkGenCopiedMsg.hidden = false;
+    } catch (e) {
+      try {
+        document.execCommand("copy"); // navigateur sans l'API Clipboard
+        linkGenCopiedMsg.hidden = false;
+      } catch (e2) {
+        linkGenCopiedMsg.hidden = true;
+      }
+    }
+  });
+
   function updateUrl(classe) {
     const url = new URL(window.location.href);
     if (classe) url.searchParams.set("classe", classe);
@@ -361,6 +402,36 @@
       loadStats(resolved);
     } catch (e) {
       alert("Impossible de réinitialiser les données (serveur inaccessible).");
+    }
+  });
+
+  // ---- Impression du rapport ----
+
+  document.getElementById("dashboard-print-btn").addEventListener("click", () => {
+    window.print();
+  });
+
+  // ---- Export CSV ----
+
+  document.getElementById("export-csv-btn").addEventListener("click", async () => {
+    const classe = currentClasse();
+    const url = classe ? `api/export.csv?classe=${encodeURIComponent(classe)}` : "api/export.csv";
+    try {
+      const res = await fetch(url);
+      if (redirectToLoginIfUnauthorized(res)) return;
+      if (!res.ok) throw new Error("bad status");
+      const blob = await res.blob();
+      const disposition = res.headers.get("Content-Disposition") || "";
+      const match = disposition.match(/filename="([^"]+)"/);
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = match ? match[1] : "empreinte.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
+    } catch (e) {
+      alert("Impossible d'exporter les données (serveur inaccessible).");
     }
   });
 
