@@ -30,6 +30,22 @@
   // pas une mesure officielle, mais un point de comparaison cohérent
   // avec ce que le quiz mesure réellement.
   const REFERENCE_MOYENNE_BE = 229;
+
+  // Le détail par catégorie du même profil moyen, pour comparer chaque
+  // poste (pas seulement le total) au repère — affiché comme un petit
+  // repère sur chaque barre de "Répartition par usage". La somme des
+  // huit valeurs ci-dessous fait REFERENCE_MOYENNE_BE (229, arrondi).
+  const REFERENCE_BREAKDOWN = {
+    smartphone: 29.7,
+    tablette: 29.3,
+    ordinateur: 58.0,
+    objets: 9.0,
+    consoleTv: 55.7,
+    streaming: 25.5,
+    visio: 15.6,
+    ia: 6.5,
+  };
+
   const GAUGE_MAX = 600; // kg CO2e/an, échelle max affichée sur la jauge
   const GAUGE_BANDS = [150, 350, GAUGE_MAX]; // bornes faible / moyen / élevé
 
@@ -97,13 +113,56 @@
     }
   }
 
+  // ---- Graphique de répartition par usage (barres horizontales) ----
+  // Utilisé par le calculateur (empreinte de l'élève) et le tableau de
+  // bord (moyenne de la classe) : mêmes catégories, même repère de
+  // comparaison par poste.
+
+  // container = élément DOM ; valuesByCategory = { smartphone: 30, ... }
+  // Renvoie les entrées triées par valeur décroissante (la première est
+  // la catégorie dominante), pour que l'appelant construise son propre
+  // texte ("c'est le streaming qui pèse le plus...").
+  function renderBreakdownInto(container, valuesByCategory) {
+    container.innerHTML = "";
+
+    const entries = Object.keys(CATEGORY_META)
+      .map((key) => ({
+        key,
+        value: valuesByCategory[key] || 0,
+        ref: REFERENCE_BREAKDOWN[key] || 0,
+        ...CATEGORY_META[key],
+      }))
+      .sort((a, b) => b.value - a.value);
+
+    const max = Math.max(...entries.map((e) => Math.max(e.value, e.ref)), 0.0001);
+
+    entries.forEach((e) => {
+      const row = document.createElement("div");
+      row.className = "bar-row";
+      const refPct = Math.min((e.ref / max) * 100, 100);
+      row.innerHTML = `
+        <div class="bar-row-label"><span class="bar-swatch" style="background:${e.color}"></span>${e.label}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${(e.value / max) * 100}%;background:${e.color}"></div>
+          <div class="bar-ref-mark" style="left:${refPct}%" title="Profil de référence : ${fmt(e.ref, 0)} kg"></div>
+        </div>
+        <div class="bar-value">${fmt(e.value, 0)} kg</div>
+      `;
+      container.appendChild(row);
+    });
+
+    return entries;
+  }
+
   global.EmpreinteShared = {
     REFERENCE_MOYENNE_BE,
+    REFERENCE_BREAKDOWN,
     GAUGE_MAX,
     GAUGE_BANDS,
     CATEGORIES,
     CATEGORY_META,
     fmt,
     renderGaugeInto,
+    renderBreakdownInto,
   };
 })(window);

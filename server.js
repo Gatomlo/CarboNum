@@ -1,8 +1,17 @@
-// Petit serveur Node.js : sert l'application statique et expose une API
-// minimale pour les statistiques de classe (base SQLite locale, données
-// anonymes uniquement — aucun nom, aucune adresse IP stockée). "classe"
-// et "eleve" sont des libellés libres passés en paramètre d'URL par
+// Sert l'application statique (public/) et expose une API minimale pour
+// les statistiques de classe (base SQLite locale, données anonymes
+// uniquement — aucun nom, aucune adresse IP stockée). "classe" et
+// "eleve" sont des libellés libres passés en paramètre d'URL par
 // l'enseignant·e (ex. ?classe=5B&eleve=12), pas des données d'identité.
+//
+// Ce module exporte l'app Express (module.exports = app) plutôt que
+// d'appeler app.listen() inconditionnellement, pour pouvoir être monté
+// tel quel par une passerelle Node.js (ex. node-gateway) qui héberge
+// plusieurs outils sur un seul processus, via app.use('/mon-outil',
+// require('./server.js')) — Express retire alors automatiquement le
+// préfixe avant que les routes ci-dessous ne le voient. Lancé seul
+// (node server.js / npm start), il continue de démarrer son propre
+// serveur normalement, voir le bloc require.main tout en bas.
 "use strict";
 
 const path = require("path");
@@ -15,7 +24,9 @@ const MAX_LABEL_LEN = 60;
 
 const app = express();
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "..")));
+// Uniquement les fichiers destinés aux visiteurs (public/) — jamais le
+// dossier racine, qui contient aussi la base SQLite et le code serveur.
+app.use(express.static(path.join(__dirname, "public")));
 
 function isValidNumber(n) {
   return typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= MAX_PLAUSIBLE_KG;
@@ -160,8 +171,12 @@ app.delete("/api/submissions", (req, res) => {
   res.json({ ok: true });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Empreinte Numérique — serveur lancé sur http://localhost:${PORT}`);
-  console.log(`Tableau de bord enseignant : http://localhost:${PORT}/dashboard.html`);
-});
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Empreinte Numérique — serveur lancé sur http://localhost:${PORT}`);
+    console.log(`Tableau de bord enseignant : http://localhost:${PORT}/dashboard.html`);
+  });
+}
+
+module.exports = app;

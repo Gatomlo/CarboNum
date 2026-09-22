@@ -10,9 +10,9 @@ Le résultat est situé sur une échelle (jauge faible / moyen / élevé, compar
 
 C'est une page web statique, sans dépendance externe.
 
-- **En classe / localement** : ouvrir `index.html` dans un navigateur (double-clic ou `Fichier > Ouvrir`).
-- **Hébergement en ligne** : héberger `index.html`, `style.css`, `shared.js` et `script.js` sur n'importe quel hébergeur statique (GitHub Pages, Netlify, serveur de l'école…).
-  - Pour GitHub Pages : Settings → Pages → Deploy from branch → choisir la branche et le dossier racine.
+- **En classe / localement** : ouvrir `public/index.html` dans un navigateur (double-clic ou `Fichier > Ouvrir`).
+- **Hébergement en ligne** : héberger le contenu de `public/` sur n'importe quel hébergeur statique (GitHub Pages, Netlify, serveur de l'école…).
+  - Pour GitHub Pages : Settings → Pages → Deploy from branch → choisir la branche et le dossier `/public`.
 
 Tout le calcul s'exécute dans le navigateur. En fin de parcours, l'application essaie automatiquement de transmettre le résultat (voir ci-dessous) ; dans ce mode statique, aucun serveur ne peut le recevoir, donc rien ne part réellement — un petit message discret l'indique, et le reste de l'application fonctionne normalement.
 
@@ -21,7 +21,6 @@ Tout le calcul s'exécute dans le navigateur. En fin de parcours, l'application 
 Pour agréger les résultats de plusieurs élèves (empreinte minimale/maximale, moyenne de la classe, poste qui pèse le plus en moyenne), l'application inclut un petit serveur Node.js avec une base SQLite locale (un seul fichier, aucune donnée identifiante stockée).
 
 ```bash
-cd server
 npm install
 npm start
 ```
@@ -31,7 +30,7 @@ Le serveur démarre sur `http://localhost:3000` (modifiable via la variable d'en
 - `http://localhost:3000/` — le calculateur, pour les élèves
 - `http://localhost:3000/dashboard.html` — le tableau de bord, pour l'enseignant·e
 
-**Usage en classe** : lance le serveur sur ton ordinateur avant le cours, puis donne aux élèves l'adresse IP locale de ta machine sur le réseau de la classe (ex. `http://192.168.1.42:3000`) pour qu'ils y accèdent depuis leur propre appareil. Tu peux aussi déployer le dossier `server/` sur n'importe quel hébergeur Node gratuit (Render, Railway…) si tu veux une adresse stable.
+**Usage en classe** : lance le serveur sur ton ordinateur avant le cours, puis donne aux élèves l'adresse IP locale de ta machine sur le réseau de la classe (ex. `http://192.168.1.42:3000`) pour qu'ils y accèdent depuis leur propre appareil. Tu peux aussi déployer tout le dépôt sur n'importe quel hébergeur Node gratuit (Render, Railway…) si tu veux une adresse stable, ou le monter derrière une passerelle mutualisée (voir « Déploiement derrière une passerelle » ci-dessous).
 
 À la fin du calculateur, **le résultat de chaque élève est transmis automatiquement** — ce n'est pas une action optionnelle : dès que le calcul est terminé, le total et la répartition par usage (avec la classe et le pseudo s'ils sont renseignés, mais jamais les réponses détaillées au questionnaire ni un nom) sont envoyés au serveur, sans que l'élève ait à cliquer sur quoi que ce soit. Un petit message discret confirme la transmission (ou explique qu'elle a échoué si le serveur est inaccessible). Le tableau de bord affiche ensuite en temps réel le nombre de réponses, l'empreinte minimale, maximale et moyenne du groupe, ainsi que le poste (smartphone, streaming, IA…) qui pèse le plus en moyenne. Un bouton permet de réinitialiser les données.
 
@@ -59,11 +58,21 @@ Une classe apparue une fois dans ce sélecteur n'en disparaît **jamais** d'elle
 
 Quand une classe précise est affichée dans le tableau de bord, une carte **« Gérer les élèves de cette classe »** liste chaque réponse par pseudo avec une case à cocher. Décocher un·e élève exclut sa réponse du calcul (compte, min/max/moyenne, répartition) sans la supprimer — utile pour une réponse test ou manifestement erronée. Elle peut être recochée à tout moment. Cette exclusion s'applique aussi à la vue combinée « Toutes les classes ».
 
+#### Déploiement derrière une passerelle (hébergement mutualisé)
+
+Sur un hébergement qui n'autorise qu'une seule application Node.js (ex. Infomaniak), le dépôt entier est conçu pour être déposé tel quel dans le dossier `apps/<nom>` d'une passerelle comme [node-gateway](https://github.com/Gatomlo/node-gateway), qui monte alors l'app sur `/<nom>` :
+
+- `server.js` **exporte l'app Express** (`module.exports = app`) plutôt que d'appeler `app.listen()` inconditionnellement — lancé directement (`npm start`), il continue de démarrer son propre serveur normalement (le `app.listen()` est gardé par `if (require.main === module)`), mais une passerelle peut aussi faire `app.use('/mon-outil', require('./server.js'))` sans rien modifier.
+- Le code client (`public/script.js`, `public/dashboard.js`) n'utilise que des **chemins relatifs** (`api/submit`, jamais `/api/submit`) : Express retire automatiquement le préfixe de montage côté serveur, et les chemins relatifs se résolvent correctement côté navigateur, que l'app soit servie à la racine ou sous un sous-dossier.
+- Le dossier `public/` est le seul servi en statique (`express.static`) — le code serveur, `package.json` et la base SQLite (`empreinte.db`, créée à la racine du dépôt) restent hors de portée du navigateur.
+
+Aucune configuration supplémentaire n'est nécessaire : `npm install` à la racine installe tout, et `server.js` (ou le champ `main` de `package.json`, qui pointe déjà dessus) est le point d'entrée que la passerelle trouve par convention.
+
 ## Fonctionnement
 
 1. **Questionnaire en 8 étapes** : smartphone, tablette, ordinateur, objets connectés, console de jeux & TV connectée, streaming, visioconférence, IA générative. Pour chaque appareil, l'élève indique la durée de vie estimée du support et son usage habituel.
 2. **Calcul** : empreinte de fabrication de chaque appareil (amortie sur sa durée de vie déclarée) + empreinte d'usage annuelle (électricité, réseau, streaming, visio, requêtes IA).
-3. **Résultat** : empreinte totale annuelle en kg CO2e/an, jauge de positionnement (repère : profil de référence calculé sur les mêmes catégories), répartition par usage, et équivalences (km avion, km voiture, bouteilles plastique, m² de forêt rasée).
+3. **Résultat** : empreinte totale annuelle en kg CO2e/an, jauge de positionnement (repère : profil de référence calculé sur les mêmes catégories), répartition par usage — avec, sur chaque barre, un repère indiquant où se situe ce même profil de référence pour ce poste précis —, et équivalences (km avion, km voiture, bouteilles plastique, m² de forêt rasée).
 4. **Transmission automatique** du résultat vers les statistiques de la classe, si le serveur est lancé — sans action de l'élève.
 
 ## Méthodologie
@@ -83,10 +92,12 @@ Ils ne remplacent pas un bilan carbone individuel précis, mais permettent de co
 
 ## Fichiers
 
-- `index.html` — structure du calculateur (accueil, questionnaire, résultats)
-- `dashboard.html` — tableau de bord des statistiques de classe (enseignant·e)
-- `style.css` — mise en forme (thèmes clair/sombre automatiques)
-- `shared.js` — constantes et helpers communs (facteurs de référence, jauge SVG, formatage)
-- `script.js` — logique du calculateur (calcul, jauge, graphiques, transmission automatique du résultat)
-- `dashboard.js` — logique du tableau de bord (récupération et affichage des statistiques)
-- `server/` — petit serveur Node.js + Express + SQLite, requis uniquement pour les statistiques de classe
+- `public/index.html` — structure du calculateur (accueil, questionnaire, résultats)
+- `public/dashboard.html` — tableau de bord des statistiques de classe (enseignant·e)
+- `public/style.css` — mise en forme (thèmes clair/sombre automatiques)
+- `public/shared.js` — constantes et helpers communs (facteurs de référence, jauge SVG, graphique de répartition, formatage)
+- `public/script.js` — logique du calculateur (calcul, jauge, graphiques, transmission automatique du résultat)
+- `public/dashboard.js` — logique du tableau de bord (récupération et affichage des statistiques)
+- `server.js` — petit serveur Node.js + Express (statique + API des statistiques de classe), exporte l'app Express pour être montable derrière une passerelle
+- `db.js` — base SQLite locale (créée à la racine, hors de `public/`)
+- `package.json` — dépendances (`express`, `better-sqlite3`), `npm start` lance `server.js`

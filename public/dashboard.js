@@ -1,7 +1,7 @@
 /* ===================================================================
    Empreinte Numérique — tableau de bord enseignant
    Affiche les statistiques agrégées et anonymes récupérées via
-   l'API du serveur Node (server/). N'a aucun effet en hébergement
+   l'API du serveur Node (server.js). N'a aucun effet en hébergement
    statique (GitHub Pages…) : l'état d'erreur l'explique.
 
    Une classe peut être sélectionnée via le sélecteur ou l'URL
@@ -14,7 +14,7 @@
 (function () {
   "use strict";
 
-  const { REFERENCE_MOYENNE_BE, CATEGORY_META, fmt, renderGaugeInto } = window.EmpreinteShared;
+  const { REFERENCE_MOYENNE_BE, fmt, renderGaugeInto, renderBreakdownInto } = window.EmpreinteShared;
 
   const loadingEl = document.getElementById("loading-state");
   const errorEl = document.getElementById("error-state");
@@ -67,7 +67,7 @@
 
   async function populateClassSelect(preselect) {
     try {
-      const res = await fetch("/api/classes");
+      const res = await fetch("api/classes");
       if (res.ok) {
         knownClasses = (await res.json()).classes || [];
         writeCachedClasses(knownClasses);
@@ -94,26 +94,7 @@
   }
 
   function renderBreakdown(avgByCategory) {
-    const container = document.getElementById("dashboard-chart");
-    container.innerHTML = "";
-
-    const entries = Object.keys(CATEGORY_META)
-      .map((key) => ({ key, value: avgByCategory[key] || 0, ...CATEGORY_META[key] }))
-      .sort((a, b) => b.value - a.value);
-
-    const max = Math.max(...entries.map((e) => e.value), 0.0001);
-
-    entries.forEach((e) => {
-      const row = document.createElement("div");
-      row.className = "bar-row";
-      row.innerHTML = `
-        <div class="bar-row-label"><span class="bar-swatch" style="background:${e.color}"></span>${e.label}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${(e.value / max) * 100}%;background:${e.color}"></div></div>
-        <div class="bar-value">${fmt(e.value, 0)} kg</div>
-      `;
-      container.appendChild(row);
-    });
-
+    const entries = renderBreakdownInto(document.getElementById("dashboard-chart"), avgByCategory);
     return entries[0];
   }
 
@@ -128,7 +109,7 @@
 
     let submissions = [];
     try {
-      const res = await fetch(`/api/submissions?classe=${encodeURIComponent(classe)}`);
+      const res = await fetch(`api/submissions?classe=${encodeURIComponent(classe)}`);
       if (!res.ok) throw new Error("bad status");
       submissions = (await res.json()).submissions || [];
     } catch (e) {
@@ -149,7 +130,7 @@
       checkbox.addEventListener("change", async () => {
         checkbox.disabled = true;
         try {
-          const res = await fetch(`/api/submissions/${s.id}`, {
+          const res = await fetch(`api/submissions/${s.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ included: checkbox.checked }),
@@ -194,7 +175,7 @@
 
     let stats;
     try {
-      const url = classe ? `/api/stats?classe=${encodeURIComponent(classe)}` : "/api/stats";
+      const url = classe ? `api/stats?classe=${encodeURIComponent(classe)}` : "api/stats";
       const res = await fetch(url);
       if (!res.ok) throw new Error("bad status");
       stats = await res.json();
@@ -281,7 +262,7 @@
       : "Supprimer définitivement toutes les données, de toutes les classes ?";
     if (!confirm(confirmMsg)) return;
     try {
-      const url = classe ? `/api/submissions?classe=${encodeURIComponent(classe)}` : "/api/submissions";
+      const url = classe ? `api/submissions?classe=${encodeURIComponent(classe)}` : "api/submissions";
       const res = await fetch(url, { method: "DELETE" });
       if (!res.ok) throw new Error("bad status");
       const resolved = await populateClassSelect(classe);

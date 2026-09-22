@@ -9,7 +9,7 @@
 (function () {
   "use strict";
 
-  const { REFERENCE_MOYENNE_BE, CATEGORIES, CATEGORY_META, fmt, renderGaugeInto } = window.EmpreinteShared;
+  const { REFERENCE_MOYENNE_BE, CATEGORIES, CATEGORY_META, fmt, renderGaugeInto, renderBreakdownInto } = window.EmpreinteShared;
 
   // -------------------------------------------------------------
   // Contexte classe / élève : résolu par paramètre d'URL
@@ -386,25 +386,7 @@
   // -------------------------------------------------------------
 
   function renderBreakdown(result) {
-    const container = document.getElementById("breakdown-chart");
-    container.innerHTML = "";
-
-    const entries = Object.keys(CATEGORY_META)
-      .map((key) => ({ key, value: result[key], ...CATEGORY_META[key] }))
-      .sort((a, b) => b.value - a.value);
-
-    const max = Math.max(...entries.map((e) => e.value), 0.0001);
-
-    entries.forEach((e) => {
-      const row = document.createElement("div");
-      row.className = "bar-row";
-      row.innerHTML = `
-        <div class="bar-row-label"><span class="bar-swatch" style="background:${e.color}"></span>${e.label}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${(e.value / max) * 100}%;background:${e.color}"></div></div>
-        <div class="bar-value">${fmt(e.value, 0)} kg</div>
-      `;
-      container.appendChild(row);
-    });
+    renderBreakdownInto(document.getElementById("breakdown-chart"), result);
   }
 
   // -------------------------------------------------------------
@@ -519,7 +501,7 @@
   // part de l'élève. Envoie uniquement le total, la répartition par
   // usage, et la classe/le pseudo s'ils sont renseignés — jamais les
   // réponses détaillées au questionnaire. Ne fonctionne que si le
-  // site est servi par le petit serveur Node fourni (server/) ;
+  // site est servi par le petit serveur Node fourni (server.js) ;
   // échoue avec un message discret sinon (usage autonome du
   // calculateur, ex. GitHub Pages).
   // -------------------------------------------------------------
@@ -535,7 +517,7 @@
     });
 
     try {
-      const res = await fetch("/api/submit", {
+      const res = await fetch("api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
