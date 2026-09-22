@@ -9,6 +9,25 @@
   const { REFERENCE_MOYENNE_FR, CATEGORIES, CATEGORY_META, fmt, renderGaugeInto } = window.EmpreinteShared;
 
   // -------------------------------------------------------------
+  // Contexte classe / élève, passé en paramètre d'URL
+  // (ex. index.html?classe=5B&eleve=12). Optionnel : sans ces
+  // paramètres, le calculateur fonctionne comme avant.
+  // -------------------------------------------------------------
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const CLASSE = (urlParams.get("classe") || "").trim().slice(0, 60);
+  const ELEVE = (urlParams.get("eleve") || urlParams.get("id") || "").trim().slice(0, 60);
+
+  const contextBadge = document.getElementById("context-badge");
+  if (CLASSE || ELEVE) {
+    const parts = [];
+    if (CLASSE) parts.push(`classe ${CLASSE}`);
+    if (ELEVE) parts.push(`identifiant ${ELEVE}`);
+    contextBadge.textContent = `Tu réponds pour : ${parts.join(" — ")}`;
+    contextBadge.hidden = false;
+  }
+
+  // -------------------------------------------------------------
   // Facteurs d'émission (ordres de grandeur pédagogiques)
   // Sources : ADEME (Base Carbone, étude "Évaluation environnementale
   // des impacts du numérique en France", 2022), Arcep, GreenIT.fr,
@@ -394,7 +413,7 @@
     shareBtn.disabled = true;
     shareStatus.textContent = "Envoi…";
 
-    const payload = { total: lastResult.total };
+    const payload = { total: lastResult.total, classe: CLASSE, eleve: ELEVE };
     CATEGORIES.forEach((c) => {
       payload[c] = lastResult[c];
     });
@@ -407,7 +426,8 @@
       });
       if (!res.ok) throw new Error("bad status");
       shareBtn.textContent = "✓ Résultat partagé";
-      shareStatus.innerHTML = 'Merci ! Ton résultat anonyme a été ajouté aux statistiques de la classe. <a href="dashboard.html">Voir les statistiques →</a>';
+      const dashboardHref = CLASSE ? `dashboard.html?classe=${encodeURIComponent(CLASSE)}` : "dashboard.html";
+      shareStatus.innerHTML = `Merci ! Ton résultat anonyme a été ajouté aux statistiques de la classe. <a href="${dashboardHref}">Voir les statistiques →</a>`;
     } catch (e) {
       shareBtn.disabled = false;
       shareStatus.textContent =

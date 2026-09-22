@@ -3,6 +3,10 @@
    Affiche les statistiques agrégées et anonymes récupérées via
    l'API du serveur Node (server/). N'a aucun effet en hébergement
    statique (GitHub Pages…) : l'état d'erreur l'explique.
+
+   Une classe peut être sélectionnée via le sélecteur ou l'URL
+   (?classe=5B) ; sans sélection, les statistiques combinent toutes
+   les classes ayant répondu.
    =================================================================== */
 
 (function () {
@@ -14,11 +18,51 @@
   const emptyEl = document.getElementById("empty-state");
   const errorEl = document.getElementById("error-state");
   const resultsEl = document.getElementById("results-block");
+  const classSelect = document.getElementById("class-select");
+  const scopeSummary = document.getElementById("scope-summary");
+  const resetBtn = document.getElementById("reset-btn");
 
   function showOnly(el) {
     [loadingEl, emptyEl, errorEl, resultsEl].forEach((e) => {
       e.hidden = e !== el;
     });
+  }
+
+  function currentClasse() {
+    return classSelect.value || "";
+  }
+
+  function updateUrl(classe) {
+    const url = new URL(window.location.href);
+    if (classe) url.searchParams.set("classe", classe);
+    else url.searchParams.delete("classe");
+    window.history.replaceState({}, "", url);
+  }
+
+  async function populateClassSelect(preselect) {
+    let classes = [];
+    try {
+      const res = await fetch("/api/classes");
+      if (res.ok) classes = (await res.json()).classes || [];
+    } catch (e) {
+      /* la liste reste vide ; seule l'option "toutes les classes" sera proposée */
+    }
+
+    classSelect.innerHTML = "";
+    const allOpt = document.createElement("option");
+    allOpt.value = "";
+    allOpt.textContent = "Toutes les classes (combiné)";
+    classSelect.appendChild(allOpt);
+
+    classes.forEach((c) => {
+      const opt = document.createElement("option");
+      opt.value = c.classe;
+      opt.textContent = `${c.classe} (${c.count})`;
+      classSelect.appendChild(opt);
+    });
+
+    classSelect.value = classes.some((c) => c.classe === preselect) ? preselect : "";
+    return classSelect.value;
   }
 
   function renderBreakdown(avgByCategory) {
@@ -45,11 +89,16 @@
     return entries[0];
   }
 
-  async function load() {
+  async function loadStats(classe) {
     showOnly(loadingEl);
+
+    scopeSummary.textContent = "";
+    resetBtn.textContent = classe ? `↺ Réinitialiser les données de « ${classe} »` : "↺ Réinitialiser toutes les données (toutes classes)";
+
     let stats;
     try {
-      const res = await fetch("/api/stats");
+      const url = classe ? `/api/stats?classe=${encodeURIComponent(classe)}` : "/api/stats";
+      const res = await fetch(url);
       if (!res.ok) throw new Error("bad status");
       stats = await res.json();
     } catch (e) {
@@ -58,9 +107,14 @@
     }
 
     if (!stats.count) {
+      scopeSummary.textContent = classe ? `Classe « ${classe} » : aucune réponse pour l'instant.` : "Aucune réponse pour l'instant, toutes classes confondues.";
       showOnly(emptyEl);
       return;
     }
+
+    scopeSummary.textContent = classe
+      ? `Classe « ${classe} » — ${fmt(stats.count, 0)} réponse(s).`
+      : `Toutes classes confondues — ${fmt(stats.count, 0)} réponse(s)${stats.classesCount ? ` sur ${fmt(stats.classesCount, 0)} classe(s)` : ""}.`;
 
     document.getElementById("stat-count").textContent = fmt(stats.count, 0);
     document.getElementById("stat-min").textContent = fmt(stats.min, 0);
@@ -70,7 +124,7 @@
     const diffPct = ((stats.avg - REFERENCE_MOYENNE_FR) / REFERENCE_MOYENNE_FR) * 100;
     const avgContext = document.getElementById("avg-context");
     if (Math.abs(diffPct) < 3) {
-      avgContext.textContent = "La moyenne de la classe est très proche de la moyenne numérique d'un habitant en France (~250 kg CO2e/an).";
+      avgContext.textContent = "Cette moyenne est très proche de la moyenne numérique d'un habitant en France (~250 kg CO2e/an).";
     } else if (diffPct < 0) {
       avgContext.textContent = `Soit environ ${fmt(Math.abs(diffPct), 0)} % de moins que la moyenne numérique d'un habitant en France (~250 kg CO2e/an).`;
     } else {
@@ -97,12 +151,32 @@
     showOnly(resultsEl);
   }
 
-  document.getElementById("reset-btn").addEventListener("click", async () => {
-    if (!confirm("Supprimer définitivement toutes les données partagées par la classe ?")) return;
+  async function init() {
+    const initialClasse = new URLSearchParams(window.location.search).get("classe") || "";
+    const resolved = await populateClassSelect(initialClasse);
+    updateUrl(resolved);
+    loadStats(resolved);
+  }
+
+  classSelect.addEventListener("change", () => {
+    const classe = currentClasse();
+    updateUrl(classe);
+    loadStats(classe);
+  });
+
+  resetBtn.addEventListener("click", async () => {
+    const classe = currentClasse();
+    const confirmMsg = classe
+      ? `Supprimer définitivement les données de la classe « ${classe} » ?`
+      : "Supprimer définitivement toutes les données, de toutes les classes ?";
+    if (!confirm(confirmMsg)) return;
     try {
-      const res = await fetch("/api/submissions", { method: "DELETE" });
+      const url = classe ? `/api/submissions?classe=${encodeURIComponent(classe)}` : "/api/submissions";
+      const res = await fetch(url, { method: "DELETE" });
       if (!res.ok) throw new Error("bad status");
-      load();
+      const resolved = await populateClassSelect(classe);
+      updateUrl(resolved);
+      loadStats(resolved);
     } catch (e) {
       alert("Impossible de réinitialiser les données (serveur inaccessible).");
     }
@@ -134,5 +208,5 @@
     }
   })();
 
-  load();
+  init();
 })();

@@ -33,7 +33,27 @@ Le serveur démarre sur `http://localhost:3000` (modifiable via la variable d'en
 
 **Usage en classe** : lance le serveur sur ton ordinateur avant le cours, puis donne aux élèves l'adresse IP locale de ta machine sur le réseau de la classe (ex. `http://192.168.1.42:3000`) pour qu'ils y accèdent depuis leur propre appareil. Tu peux aussi déployer le dossier `server/` sur n'importe quel hébergeur Node gratuit (Render, Railway…) si tu veux une adresse stable.
 
-À la fin du calculateur, chaque élève peut cliquer sur **« Partager mon résultat (anonyme) »** : seuls le total et la répartition par usage sont envoyés — aucun nom, aucun identifiant. Le tableau de bord affiche ensuite en temps réel le nombre de réponses, l'empreinte minimale, maximale et moyenne du groupe, ainsi que le poste (smartphone, streaming, IA…) qui pèse le plus en moyenne. Un bouton permet de réinitialiser les données entre deux classes.
+À la fin du calculateur, chaque élève peut cliquer sur **« Partager mon résultat (anonyme) »** : seuls le total et la répartition par usage sont envoyés — aucun nom. Le tableau de bord affiche ensuite en temps réel le nombre de réponses, l'empreinte minimale, maximale et moyenne du groupe, ainsi que le poste (smartphone, streaming, IA…) qui pèse le plus en moyenne. Un bouton permet de réinitialiser les données.
+
+#### Plusieurs classes en parallèle
+
+Pour distinguer les classes, ajoute des paramètres à l'URL que tu donnes aux élèves :
+
+```
+http://localhost:3000/?classe=5B&eleve=12
+```
+
+- `classe` — nom ou code du groupe classe (ex. `5B`, `3eA`…)
+- `eleve` (ou `id`) — un identifiant au choix (numéro de rang, pseudo…), utilisé uniquement pour qu'une nouvelle réponse du même élève **remplace** la précédente au lieu de la dupliquer. Ce n'est pas un nom et il n'est affiché nulle part dans les statistiques.
+
+Ces deux paramètres sont optionnels : sans eux, l'application fonctionne comme avant (partage anonyme, sans classe). Chaque élève voit un petit badge en haut de page confirmant le contexte dans lequel il répond.
+
+Le tableau de bord (`dashboard.html`) propose un sélecteur pour :
+
+- afficher une **classe précise** (`dashboard.html?classe=5B`, ou via le menu déroulant) ;
+- ou afficher les **statistiques combinées de toutes les classes** ayant répondu (option par défaut « Toutes les classes »).
+
+Le bouton de réinitialisation n'efface que la classe actuellement affichée (ou tout, si « Toutes les classes » est sélectionné) — la confirmation précise toujours la portée avant suppression.
 
 ## Fonctionnement
 

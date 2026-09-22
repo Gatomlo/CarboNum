@@ -184,6 +184,17 @@ main { max-width: 720px; margin: 0 auto; }
 
 .privacy-note { color: var(--muted); font-size: .82rem; margin-top: 14px; }
 
+.context-badge {
+  display: inline-block;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: .8rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+  margin: 14px 0 0;
+}
+
 /* ---------------- buttons ---------------- */
 
 .btn {
@@ -416,6 +427,8 @@ input[type="range"]::-moz-range-thumb {
 .share-status a { color: var(--accent); font-weight: 600; }
 
 /* dashboard */
+
+.class-select-field { max-width: 320px; margin-top: 18px; }
 
 .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .stat-tile { background: var(--surface-2); border-radius: 12px; padding: 16px 10px; text-align: center; }
