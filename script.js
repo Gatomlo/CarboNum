@@ -1,6 +1,9 @@
 /* ===================================================================
    Empreinte Numérique — logique de calcul et interface
-   Aucune donnée ne quitte le navigateur : tout est calculé côté client.
+   Le calcul s'exécute entièrement côté client. Le résultat (total +
+   répartition par usage, avec classe/pseudo si renseignés) est
+   transmis automatiquement à l'enseignant·e une fois le calcul
+   terminé — voir "Transmission automatique du résultat" plus bas.
    =================================================================== */
 
 (function () {
@@ -404,7 +407,6 @@
     const data = readForm();
     const result = calculate(data);
     lastResult = result;
-    resetShareUI();
 
     document.getElementById("result-total").textContent = fmt(result.total, 0);
 
@@ -451,32 +453,29 @@
       nbBouteilles >= 6 ? `≈ ${fmt(nbBouteilles / 6, 0)} packs de 6 bouteilles` : "";
     document.getElementById("eq-foret-sub").textContent =
       foretTrips >= 0.1 ? `≈ ${fmt(foretTrips, 1)} fois un tapis de salon (4 m²)` : "";
+
+    submitResult(result);
   }
 
   // -------------------------------------------------------------
-  // Partage anonyme vers les statistiques de la classe
-  // N'envoie rien tant que l'élève n'a pas cliqué explicitement.
-  // Ne fonctionne que si le site est servi par le petit serveur Node
-  // fourni (server/) ; échoue silencieusement (avec message) sinon.
+  // Transmission automatique du résultat à l'enseignant·e
+  // Déclenchée dès que le résultat est calculé, sans action de la
+  // part de l'élève. Envoie uniquement le total, la répartition par
+  // usage, et la classe/le pseudo s'ils sont renseignés — jamais les
+  // réponses détaillées au questionnaire. Ne fonctionne que si le
+  // site est servi par le petit serveur Node fourni (server/) ;
+  // échoue avec un message discret sinon (usage autonome du
+  // calculateur, ex. GitHub Pages).
   // -------------------------------------------------------------
 
-  const shareBtn = document.getElementById("share-btn");
   const shareStatus = document.getElementById("share-status");
 
-  function resetShareUI() {
-    shareBtn.disabled = false;
-    shareBtn.textContent = "Partager mon résultat (anonyme)";
-    shareStatus.innerHTML = "";
-  }
+  async function submitResult(result) {
+    shareStatus.textContent = "";
 
-  shareBtn.addEventListener("click", async () => {
-    if (!lastResult) return;
-    shareBtn.disabled = true;
-    shareStatus.textContent = "Envoi…";
-
-    const payload = { total: lastResult.total, classe: CLASSE, eleve: ELEVE };
+    const payload = { total: result.total, classe: CLASSE, eleve: ELEVE };
     CATEGORIES.forEach((c) => {
-      payload[c] = lastResult[c];
+      payload[c] = result[c];
     });
 
     try {
@@ -486,15 +485,11 @@
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("bad status");
-      shareBtn.textContent = "✓ Résultat partagé";
-      const dashboardHref = CLASSE ? `dashboard.html?classe=${encodeURIComponent(CLASSE)}` : "dashboard.html";
-      shareStatus.innerHTML = `Merci ! Ton résultat anonyme a été ajouté aux statistiques de la classe. <a href="${dashboardHref}">Voir les statistiques →</a>`;
+      shareStatus.textContent = "✓ Résultat transmis à ton enseignant·e.";
     } catch (e) {
-      shareBtn.disabled = false;
-      shareStatus.textContent =
-        "Impossible de contacter le serveur de la classe. Cette fonctionnalité nécessite que le site soit lancé avec le serveur inclus (voir README).";
+      shareStatus.textContent = "Résultat non transmis : le serveur de classe n'est pas accessible.";
     }
-  });
+  }
 
   // -------------------------------------------------------------
   // Thème clair / sombre (préférence mémorisée localement)

@@ -65,7 +65,7 @@
       </div>
 
       <button class="btn btn-primary btn-lg" id="start-btn" type="button">Commencer le calcul →</button>
-      <p class="privacy-note">🔒 Le calcul se fait entièrement dans ton navigateur. Rien n'est envoyé, sauf si tu choisis explicitement de partager ton résultat de façon anonyme à la fin.</p>
+      <p class="privacy-note">🔒 Le calcul se fait dans ton navigateur. À la fin, ton résultat (empreinte totale et répartition par usage — pas tes réponses détaillées) est automatiquement transmis à ton enseignant·e, avec le code de classe et le pseudo indiqués ci-dessus si tu en as renseigné.</p>
     </div>
   </section>
 
@@ -293,12 +293,7 @@
         <ul class="tip-list" id="tip-list"></ul>
       </div>
 
-      <div class="card share-card">
-        <h2 class="card-title">Contribuer aux statistiques de la classe</h2>
-        <p class="share-copy" id="share-copy">Si ton enseignant·e a lancé le serveur de l'application, tu peux ajouter ton résultat aux statistiques du groupe. Seuls ton empreinte totale et sa répartition par usage sont envoyées&nbsp;: aucune information ne permet de t'identifier.</p>
-        <button class="btn btn-primary" id="share-btn" type="button">Partager mon résultat (anonyme)</button>
-        <p class="share-status" id="share-status" aria-live="polite"></p>
-      </div>
+      <p class="auto-share-note" id="share-status" aria-live="polite"></p>
 
       <details class="methodology">
         <summary>Méthodologie &amp; sources</summary>
@@ -312,7 +307,7 @@
             <li><strong>Équivalences</strong> : avion ≈ 230 g CO<sub>2</sub>e/km-passager (moyen-courrier), voiture ≈ 193 g CO<sub>2</sub>e/km (moyenne du parc), bouteille plastique 0,5 L ≈ 83 g CO<sub>2</sub>e (fabrication), forêt rasée ≈ 40 kg CO<sub>2</sub>e/m² (ordre de grandeur GIEC/FAO pour la déforestation, 35 à 50 t/ha selon le type de forêt).</li>
             <li><strong>Repère « moyenne en Belgique »</strong> (~170 kg CO<sub>2</sub>e/an) : estimation combinant la part du numérique dans les émissions belges (~2&nbsp;%, Digital Wallonia / Bruxelles Environnement) et l'empreinte carbone moyenne par habitant en Belgique (~8,5 t CO<sub>2</sub>e/an, territoriale). Il n'existe pas, à notre connaissance, d'étude belge dédiée équivalente à l'étude ADEME/Arcep pour la France&nbsp;: ce repère est donc une estimation, pas une mesure officielle.</li>
           </ul>
-          <p>Aucune donnée saisie n'est enregistrée ni transmise&nbsp;: le calcul s'exécute entièrement dans le navigateur.</p>
+          <p>Le calcul s'exécute entièrement dans le navigateur. À la fin, seul le résultat (empreinte totale et répartition par usage), avec le code de classe et le pseudo s'ils ont été renseignés, est transmis automatiquement à ton enseignant·e — jamais tes réponses détaillées au questionnaire, ni ton vrai nom.</p>
         </div>
       </details>
 

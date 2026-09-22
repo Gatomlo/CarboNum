@@ -14,7 +14,7 @@ C'est une page web statique, sans dépendance externe.
 - **Hébergement en ligne** : héberger `index.html`, `style.css`, `shared.js` et `script.js` sur n'importe quel hébergeur statique (GitHub Pages, Netlify, serveur de l'école…).
   - Pour GitHub Pages : Settings → Pages → Deploy from branch → choisir la branche et le dossier racine.
 
-Dans ce mode, rien n'est jamais envoyé nulle part : tout le calcul s'exécute dans le navigateur. Le bouton « Partager mon résultat » (voir ci-dessous) affiche un message d'erreur puisqu'aucun serveur n'est disponible pour le recevoir — le reste de l'application fonctionne normalement.
+Tout le calcul s'exécute dans le navigateur. En fin de parcours, l'application essaie automatiquement de transmettre le résultat (voir ci-dessous) ; dans ce mode statique, aucun serveur ne peut le recevoir, donc rien ne part réellement — un petit message discret l'indique, et le reste de l'application fonctionne normalement.
 
 ### 2. Calculateur + statistiques de classe (avec le petit serveur Node)
 
@@ -33,7 +33,7 @@ Le serveur démarre sur `http://localhost:3000` (modifiable via la variable d'en
 
 **Usage en classe** : lance le serveur sur ton ordinateur avant le cours, puis donne aux élèves l'adresse IP locale de ta machine sur le réseau de la classe (ex. `http://192.168.1.42:3000`) pour qu'ils y accèdent depuis leur propre appareil. Tu peux aussi déployer le dossier `server/` sur n'importe quel hébergeur Node gratuit (Render, Railway…) si tu veux une adresse stable.
 
-À la fin du calculateur, chaque élève peut cliquer sur **« Partager mon résultat (anonyme) »** : seuls le total et la répartition par usage sont envoyés — aucun nom. Le tableau de bord affiche ensuite en temps réel le nombre de réponses, l'empreinte minimale, maximale et moyenne du groupe, ainsi que le poste (smartphone, streaming, IA…) qui pèse le plus en moyenne. Un bouton permet de réinitialiser les données.
+À la fin du calculateur, **le résultat de chaque élève est transmis automatiquement** — ce n'est pas une action optionnelle : dès que le calcul est terminé, le total et la répartition par usage (avec la classe et le pseudo s'ils sont renseignés, mais jamais les réponses détaillées au questionnaire ni un nom) sont envoyés au serveur, sans que l'élève ait à cliquer sur quoi que ce soit. Un petit message discret confirme la transmission (ou explique qu'elle a échoué si le serveur est inaccessible). Le tableau de bord affiche ensuite en temps réel le nombre de réponses, l'empreinte minimale, maximale et moyenne du groupe, ainsi que le poste (smartphone, streaming, IA…) qui pèse le plus en moyenne. Un bouton permet de réinitialiser les données.
 
 #### Plusieurs classes en parallèle
 
@@ -64,7 +64,7 @@ Quand une classe précise est affichée dans le tableau de bord, une carte **« 
 1. **Questionnaire en 6 étapes** : smartphone, tablette, ordinateur, objets connectés, streaming, IA générative. Pour chaque appareil, l'élève indique la durée de vie estimée du support et son usage habituel.
 2. **Calcul** : empreinte de fabrication de chaque appareil (amortie sur sa durée de vie déclarée) + empreinte d'usage annuelle (électricité, réseau, streaming, requêtes IA).
 3. **Résultat** : empreinte totale annuelle en kg CO2e/an, jauge de positionnement (repère : moyenne numérique estimée en Belgique), répartition par usage, et équivalences (km avion, km voiture, bouteilles plastique, m² de forêt rasée).
-4. **Partage optionnel et anonyme** vers les statistiques de la classe, si le serveur est lancé.
+4. **Transmission automatique** du résultat vers les statistiques de la classe, si le serveur est lancé — sans action de l'élève.
 
 ## Méthodologie
 
@@ -87,6 +87,6 @@ Ils ne remplacent pas un bilan carbone individuel précis, mais permettent de co
 - `dashboard.html` — tableau de bord des statistiques de classe (enseignant·e)
 - `style.css` — mise en forme (thèmes clair/sombre automatiques)
 - `shared.js` — constantes et helpers communs (facteurs de référence, jauge SVG, formatage)
-- `script.js` — logique du calculateur (calcul, jauge, graphiques, partage anonyme)
+- `script.js` — logique du calculateur (calcul, jauge, graphiques, transmission automatique du résultat)
 - `dashboard.js` — logique du tableau de bord (récupération et affichage des statistiques)
 - `server/` — petit serveur Node.js + Express + SQLite, requis uniquement pour les statistiques de classe
