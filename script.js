@@ -6,7 +6,7 @@
 (function () {
   "use strict";
 
-  const { REFERENCE_MOYENNE_FR, CATEGORIES, CATEGORY_META, fmt, renderGaugeInto } = window.EmpreinteShared;
+  const { REFERENCE_MOYENNE_BE, CATEGORIES, CATEGORY_META, fmt, renderGaugeInto } = window.EmpreinteShared;
 
   // -------------------------------------------------------------
   // Contexte classe / élève : résolu par paramètre d'URL
@@ -102,8 +102,10 @@
     avionGParKm: 230, // g CO2e / km-passager, vol moyen-courrier
     voitureGParKm: 193, // g CO2e / km, moyenne du parc automobile
     bouteilleG: 83, // g CO2e / bouteille plastique 0.5L (fabrication)
+    foretGParM2: 40000, // g CO2e / m², déforestation (ordre de grandeur GIEC/FAO, 35-50 t/ha)
     refAvionKm: 1090, // Bruxelles - Barcelone, aller simple
     refVoitureKm: 310, // Bruxelles - Paris, aller simple
+    refForetM2: 4, // surface d'un tapis de salon, pour donner une échelle
   };
 
   // -------------------------------------------------------------
@@ -320,7 +322,7 @@
         refMarker: document.getElementById("gauge-ref-marker"),
       },
       total,
-      REFERENCE_MOYENNE_FR
+      REFERENCE_MOYENNE_BE
     );
   }
 
@@ -406,14 +408,14 @@
 
     document.getElementById("result-total").textContent = fmt(result.total, 0);
 
-    const diffPct = ((result.total - REFERENCE_MOYENNE_FR) / REFERENCE_MOYENNE_FR) * 100;
+    const diffPct = ((result.total - REFERENCE_MOYENNE_BE) / REFERENCE_MOYENNE_BE) * 100;
     const contextEl = document.getElementById("result-context");
     if (Math.abs(diffPct) < 3) {
-      contextEl.textContent = "C'est très proche de la moyenne numérique d'un habitant en France (~250 kg CO2e/an).";
+      contextEl.textContent = "C'est très proche de la moyenne numérique estimée d'un habitant en Belgique (~170 kg CO2e/an).";
     } else if (diffPct < 0) {
-      contextEl.textContent = `Soit environ ${fmt(Math.abs(diffPct), 0)} % de moins que la moyenne numérique d'un habitant en France (~250 kg CO2e/an).`;
+      contextEl.textContent = `Soit environ ${fmt(Math.abs(diffPct), 0)} % de moins que la moyenne numérique estimée d'un habitant en Belgique (~170 kg CO2e/an).`;
     } else {
-      contextEl.textContent = `Soit environ ${fmt(diffPct, 0)} % de plus que la moyenne numérique d'un habitant en France (~250 kg CO2e/an).`;
+      contextEl.textContent = `Soit environ ${fmt(diffPct, 0)} % de plus que la moyenne numérique estimée d'un habitant en Belgique (~170 kg CO2e/an).`;
     }
 
     renderGauge(result.total);
@@ -426,13 +428,16 @@
     const kmAvion = totalG / EQUIV.avionGParKm;
     const kmVoiture = totalG / EQUIV.voitureGParKm;
     const nbBouteilles = totalG / EQUIV.bouteilleG;
+    const m2Foret = totalG / EQUIV.foretGParM2;
 
     document.getElementById("eq-avion-km").textContent = `${fmt(kmAvion, 0)} km`;
     document.getElementById("eq-voiture-km").textContent = `${fmt(kmVoiture, 0)} km`;
     document.getElementById("eq-bouteilles").textContent = fmt(nbBouteilles, 0);
+    document.getElementById("eq-foret").textContent = `${fmt(m2Foret, 1)} m²`;
 
     const avionTrips = kmAvion / (EQUIV.refAvionKm * 2);
     const voitureTrips = kmVoiture / (EQUIV.refVoitureKm * 2);
+    const foretTrips = m2Foret / EQUIV.refForetM2;
 
     document.getElementById("eq-avion-sub").textContent =
       avionTrips >= 0.1
@@ -444,6 +449,8 @@
         : "";
     document.getElementById("eq-bouteilles-sub").textContent =
       nbBouteilles >= 6 ? `≈ ${fmt(nbBouteilles / 6, 0)} packs de 6 bouteilles` : "";
+    document.getElementById("eq-foret-sub").textContent =
+      foretTrips >= 0.1 ? `≈ ${fmt(foretTrips, 1)} fois un tapis de salon (4 m²)` : "";
   }
 
   // -------------------------------------------------------------

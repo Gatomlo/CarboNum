@@ -14,7 +14,7 @@
 (function () {
   "use strict";
 
-  const { REFERENCE_MOYENNE_FR, CATEGORY_META, fmt, renderGaugeInto } = window.EmpreinteShared;
+  const { REFERENCE_MOYENNE_BE, CATEGORY_META, fmt, renderGaugeInto } = window.EmpreinteShared;
 
   const loadingEl = document.getElementById("loading-state");
   const errorEl = document.getElementById("error-state");
@@ -39,13 +39,41 @@
     window.history.replaceState({}, "", url);
   }
 
+  // Dernière liste de classes obtenue avec succès. Une classe ne doit
+  // jamais disparaître du sélecteur suite à un simple échec réseau
+  // passager — seule une suppression explicite côté serveur (reset)
+  // doit la faire disparaître. Un échec de /api/classes garde donc la
+  // liste précédemment connue plutôt que de la vider ; elle est aussi
+  // mise en cache dans localStorage pour survivre à un rechargement de
+  // page pendant une panne réseau (sinon la mémoire JS serait perdue).
+  let knownClasses = readCachedClasses();
+
+  function readCachedClasses() {
+    try {
+      const raw = localStorage.getItem("empreinte-known-classes");
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function writeCachedClasses(classes) {
+    try {
+      localStorage.setItem("empreinte-known-classes", JSON.stringify(classes));
+    } catch (e) {
+      /* stockage indisponible : pas bloquant */
+    }
+  }
+
   async function populateClassSelect(preselect) {
-    let classes = [];
     try {
       const res = await fetch("/api/classes");
-      if (res.ok) classes = (await res.json()).classes || [];
+      if (res.ok) {
+        knownClasses = (await res.json()).classes || [];
+        writeCachedClasses(knownClasses);
+      }
     } catch (e) {
-      /* la liste reste vide ; seule l'option "toutes les classes" sera proposée */
+      /* échec réseau : on garde la dernière liste connue, on ne la vide pas */
     }
 
     classSelect.innerHTML = "";
@@ -54,14 +82,14 @@
     allOpt.textContent = "Toutes les classes (combiné)";
     classSelect.appendChild(allOpt);
 
-    classes.forEach((c) => {
+    knownClasses.forEach((c) => {
       const opt = document.createElement("option");
       opt.value = c.classe;
       opt.textContent = `${c.classe} (${c.count})`;
       classSelect.appendChild(opt);
     });
 
-    classSelect.value = classes.some((c) => c.classe === preselect) ? preselect : "";
+    classSelect.value = knownClasses.some((c) => c.classe === preselect) ? preselect : "";
     return classSelect.value;
   }
 
@@ -199,14 +227,14 @@
       document.getElementById("stat-max").textContent = fmt(stats.max, 0);
       document.getElementById("stat-avg").textContent = fmt(stats.avg, 0);
 
-      const diffPct = ((stats.avg - REFERENCE_MOYENNE_FR) / REFERENCE_MOYENNE_FR) * 100;
+      const diffPct = ((stats.avg - REFERENCE_MOYENNE_BE) / REFERENCE_MOYENNE_BE) * 100;
       const avgContext = document.getElementById("avg-context");
       if (Math.abs(diffPct) < 3) {
-        avgContext.textContent = "Cette moyenne est très proche de la moyenne numérique d'un habitant en France (~250 kg CO2e/an).";
+        avgContext.textContent = "Cette moyenne est très proche de la moyenne numérique estimée d'un habitant en Belgique (~170 kg CO2e/an).";
       } else if (diffPct < 0) {
-        avgContext.textContent = `Soit environ ${fmt(Math.abs(diffPct), 0)} % de moins que la moyenne numérique d'un habitant en France (~250 kg CO2e/an).`;
+        avgContext.textContent = `Soit environ ${fmt(Math.abs(diffPct), 0)} % de moins que la moyenne numérique estimée d'un habitant en Belgique (~170 kg CO2e/an).`;
       } else {
-        avgContext.textContent = `Soit environ ${fmt(diffPct, 0)} % de plus que la moyenne numérique d'un habitant en France (~250 kg CO2e/an).`;
+        avgContext.textContent = `Soit environ ${fmt(diffPct, 0)} % de plus que la moyenne numérique estimée d'un habitant en Belgique (~170 kg CO2e/an).`;
       }
 
       renderGaugeInto(
@@ -218,7 +246,7 @@
           refMarker: document.getElementById("gauge-ref-marker"),
         },
         stats.avg,
-        REFERENCE_MOYENNE_FR
+        REFERENCE_MOYENNE_BE
       );
 
       const top = renderBreakdown(stats.avgByCategory);

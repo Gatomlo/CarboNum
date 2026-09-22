@@ -431,7 +431,7 @@ input[type="range"]::-moz-range-thumb {
 
 /* equivalences */
 
-.equiv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.equiv-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .equiv-card { text-align: center; background: var(--surface-2); border-radius: 12px; padding: 16px 8px; }
 .equiv-card svg { width: 32px; height: 32px; color: var(--accent); margin-bottom: 8px; }
 .equiv-value { font-family: var(--font-mono); font-weight: 700; font-size: 1.2rem; margin: 0; font-variant-numeric: tabular-nums; }

@@ -6,7 +6,14 @@
 (function (global) {
   "use strict";
 
-  const REFERENCE_MOYENNE_FR = 250; // kg CO2e/an, ordre de grandeur ADEME/Arcep
+  // kg CO2e/an, estimation de l'empreinte numérique moyenne d'un habitant
+  // de Belgique. Faute d'étude belge dédiée équivalente à l'étude ADEME/
+  // Arcep pour la France, ce repère combine : la part du numérique dans
+  // les émissions belges (~2 %, Digital Wallonia / Bruxelles Environnement,
+  // étude "Numérique et environnement") et l'empreinte carbone moyenne par
+  // habitant en Belgique (~8,5 t CO2e/an, territoriale — écoconso/Our World
+  // in Data). Ordre de grandeur pédagogique, pas une mesure officielle.
+  const REFERENCE_MOYENNE_BE = 170;
   const GAUGE_MAX = 600; // kg CO2e/an, échelle max affichée sur la jauge
   const GAUGE_BANDS = [150, 350, GAUGE_MAX]; // bornes faible / moyen / élevé
 
@@ -73,7 +80,7 @@
   }
 
   global.EmpreinteShared = {
-    REFERENCE_MOYENNE_FR,
+    REFERENCE_MOYENNE_BE,
     GAUGE_MAX,
     GAUGE_BANDS,
     CATEGORIES,

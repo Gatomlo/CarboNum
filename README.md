@@ -2,7 +2,7 @@
 
 Petite application web pédagogique pour calculer l'empreinte carbone numérique des élèves : smartphone, tablette, ordinateur, objets connectés, streaming vidéo et IA générative, sur la durée de vie de leurs appareils.
 
-Le résultat est situé sur une échelle (jauge faible / moyen / élevé, comparée à la moyenne numérique d'un habitant en France) et traduit en équivalences concrètes : distance en avion, distance en voiture, nombre de bouteilles plastique.
+Le résultat est situé sur une échelle (jauge faible / moyen / élevé, comparée à la moyenne numérique estimée d'un habitant en Belgique) et traduit en équivalences concrètes : distance en avion, distance en voiture, nombre de bouteilles plastique, surface de forêt rasée.
 
 ## Deux modes d'utilisation
 
@@ -53,7 +53,7 @@ Le tableau de bord (`dashboard.html`) propose un sélecteur pour :
 - afficher une **classe précise** (`dashboard.html?classe=5B`, ou via le menu déroulant) ;
 - ou afficher les **statistiques combinées de toutes les classes** ayant répondu (option par défaut « Toutes les classes »).
 
-Le bouton de réinitialisation n'efface que la classe actuellement affichée (ou tout, si « Toutes les classes » est sélectionné) — la confirmation précise toujours la portée avant suppression.
+Une classe apparue une fois dans ce sélecteur n'en disparaît **jamais** d'elle-même (même si tous ses élèves sont exclus, voir ci-dessous, ou en cas de coupure réseau passagère) — seul un reset explicite de cette classe (bouton de réinitialisation) la supprime. Le bouton de réinitialisation n'efface que la classe actuellement affichée (ou tout, si « Toutes les classes » est sélectionné) — la confirmation précise toujours la portée avant suppression.
 
 #### Exclure un·e élève des statistiques
 
@@ -63,7 +63,7 @@ Quand une classe précise est affichée dans le tableau de bord, une carte **« 
 
 1. **Questionnaire en 6 étapes** : smartphone, tablette, ordinateur, objets connectés, streaming, IA générative. Pour chaque appareil, l'élève indique la durée de vie estimée du support et son usage habituel.
 2. **Calcul** : empreinte de fabrication de chaque appareil (amortie sur sa durée de vie déclarée) + empreinte d'usage annuelle (électricité, réseau, streaming, requêtes IA).
-3. **Résultat** : empreinte totale annuelle en kg CO2e/an, jauge de positionnement, répartition par usage, et équivalences (km avion/voiture, bouteilles plastique).
+3. **Résultat** : empreinte totale annuelle en kg CO2e/an, jauge de positionnement (repère : moyenne numérique estimée en Belgique), répartition par usage, et équivalences (km avion, km voiture, bouteilles plastique, m² de forêt rasée).
 4. **Partage optionnel et anonyme** vers les statistiques de la classe, si le serveur est lancé.
 
 ## Méthodologie
@@ -74,8 +74,12 @@ Les coefficients utilisés sont des **ordres de grandeur pédagogiques**, constr
 - Arcep
 - GreenIT.fr
 - The Shift Project
+- Digital Wallonia / Bruxelles Environnement — étude *« Numérique et environnement »* (part du numérique dans les émissions belges)
+- GIEC / FAO — ordres de grandeur d'émissions liées à la déforestation
 
 Ils ne remplacent pas un bilan carbone individuel précis, mais permettent de comparer des ordres de grandeur entre usages numériques et de les situer par rapport à des repères connus. Le détail des facteurs est visible directement dans l'application (section « Méthodologie & sources » sous les résultats) et dans `script.js`.
+
+**Repère belge** : il n'existe pas, à notre connaissance, d'étude belge dédiée à l'empreinte numérique par habitant équivalente à l'étude ADEME/Arcep pour la France. Le repère de ~170 kg CO2e/an utilisé ici est donc une **estimation**, obtenue en combinant la part du numérique dans les émissions belges (~2&nbsp;%, Digital Wallonia / Bruxelles Environnement) et l'empreinte carbone moyenne par habitant en Belgique (~8,5 t CO2e/an, territoriale). Si une étude belge plus précise existe, ce repère (`REFERENCE_MOYENNE_BE` dans `shared.js`) est à mettre à jour en conséquence.
 
 ## Fichiers
 
