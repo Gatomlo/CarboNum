@@ -392,6 +392,21 @@ app.get("/api/export.csv", requireAdmin, (req, res) => {
   res.send(`﻿${lines.join("\r\n")}`);
 });
 
+// Filet de sécurité : si une route lève une exception (le cas le plus
+// probable étant une écriture d'empreinte.json impossible — dossier de
+// l'app non accessible en écriture sur l'hébergeur), répond en JSON
+// exploitable plutôt qu'avec la page HTML d'erreur par défaut d'Express,
+// qui casse silencieusement le fetch() côté client (res.json() échoue,
+// et l'appelant retombe sur un message générique sans piste). Doit
+// rester la dernière chose déclarée sur l'app (convention Express pour
+// un middleware d'erreur à 4 arguments).
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({
+    error: "Erreur serveur inattendue. Vérifie que le dossier de l'app est accessible en écriture sur l'hébergeur (fichier empreinte.json), et consulte les journaux du serveur pour le détail.",
+  });
+});
+
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
