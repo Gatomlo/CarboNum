@@ -96,6 +96,7 @@ Ils ne remplacent pas un bilan carbone individuel précis, mais permettent de co
 - `public/index.html` — structure du calculateur (accueil, questionnaire, résultats)
 - `public/dashboard.html` — tableau de bord des statistiques de classe (enseignant·e)
 - `public/style.css` — mise en forme (thèmes clair/sombre automatiques)
+- `public/icon.svg`, `public/icon-512.png`, `public/manifest.json` — icône de l'app (favicon, PWA, et détectée automatiquement par node-gateway pour sa page d'accueil)
 - `public/shared.js` — constantes et helpers communs (facteurs de référence, jauge SVG, graphique de répartition, formatage)
 - `public/script.js` — logique du calculateur (calcul, jauge, graphiques, transmission automatique du résultat)
 - `public/dashboard.js` — logique du tableau de bord (récupération et affichage des statistiques)

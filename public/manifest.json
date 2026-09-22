@@ -1,0 +1,13 @@
+{
+  "name": "Empreinte Numérique",
+  "short_name": "Empreinte Numérique",
+  "description": "Calculateur pédagogique de l'empreinte carbone numérique des élèves.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f4",
+  "theme_color": "#1d6f6b",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
