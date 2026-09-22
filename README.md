@@ -34,19 +34,37 @@ Le serveur démarre sur `http://localhost:3000` (modifiable via la variable d'en
 
 #### Protéger le tableau de bord par mot de passe
 
-Le tableau de bord (statistiques et gestion des élèves) est protégé par un mot de passe unique, à définir via la variable d'environnement `ADMIN_PASSWORD` :
+Le tableau de bord (statistiques et gestion des élèves) est protégé par un mot de passe unique. Deux façons de le configurer :
+
+**Option recommandée — mot de passe haché (`ADMIN_PASSWORD_HASH`)**
+
+Le mot de passe en clair ne touche alors jamais le disque : seul un hash (scrypt, intégré à Node — pas de dépendance native) est stocké. Génère-le avec l'outil fourni, en local :
+
+```bash
+node hash-password.js
+```
+
+Il demande le mot de passe en saisie masquée (rien ne s'affiche à l'écran, et il n'est écrit nulle part par l'outil), puis affiche une ligne à copier :
+
+```
+ADMIN_PASSWORD_HASH=scrypt$...$...
+```
+
+Colle cette ligne dans ton fichier `.env` (en développement local, jamais commité, déjà dans `.gitignore`) ou dans les variables d'environnement du panneau de ton hébergeur (Render, Railway, Infomaniak…).
+
+**Option simple — mot de passe en clair (`ADMIN_PASSWORD`)**
+
+Toujours prise en charge, pour rester compatible avec les déploiements existants, mais le mot de passe est alors stocké en clair (dans `.env` ou les variables d'environnement de l'hébergeur) :
 
 ```bash
 ADMIN_PASSWORD="un mot de passe" npm start
 ```
 
-Ou, en développement local, crée un fichier `.env` à la racine du dépôt (jamais commité, déjà dans `.gitignore`) :
-
 ```
 ADMIN_PASSWORD=un mot de passe
 ```
 
-Sur un hébergeur (Render, Railway, Infomaniak…), règle plutôt `ADMIN_PASSWORD` dans les variables d'environnement de son panneau d'administration. **Tant qu'elle n'est pas définie, la connexion est refusée** (échec explicite, pas de mot de passe par défaut). Une fois connecté·e, la session reste valide 12 h ou jusqu'à la déconnexion (bouton « Déconnexion » en haut du tableau de bord) ; un redémarrage du serveur déconnecte tout le monde, sans conséquence pour les données.
+Si les deux variables sont définies, `ADMIN_PASSWORD_HASH` est prioritaire. **Tant qu'aucune des deux n'est définie, la connexion est refusée** (échec explicite, pas de mot de passe par défaut). Une fois connecté·e, la session reste valide 12 h ou jusqu'à la déconnexion (bouton « Déconnexion » en haut du tableau de bord) ; un redémarrage du serveur déconnecte tout le monde, sans conséquence pour les données.
 
 Sur la page du calculateur, un lien discret « Espace enseignant → » en bas de page mène au tableau de bord.
 
@@ -140,4 +158,6 @@ Ils ne remplacent pas un bilan carbone individuel précis, mais permettent de co
 - `public/projection.js` — logique du mode projection (connexion, actualisation automatique)
 - `server.js` — petit serveur Node.js + Express (statique + API des statistiques de classe), exporte l'app Express pour être montable derrière une passerelle
 - `db.js` — stockage JSON local (`empreinte.json`, créé à la racine, hors de `public/`), sans dépendance native
+- `password-hash.js` — hachage/vérification du mot de passe administrateur (scrypt, intégré à Node)
+- `hash-password.js` — outil en ligne de commande pour générer un `ADMIN_PASSWORD_HASH` (voir « Protéger le tableau de bord par mot de passe »)
 - `package.json` — dépendances (`express` uniquement), `npm start` lance `server.js`

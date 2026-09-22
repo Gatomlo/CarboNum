@@ -19,9 +19,10 @@ const fs = require("fs");
 const crypto = require("crypto");
 const express = require("express");
 const db = require("./db");
+const { verifyPassword } = require("./password-hash");
 
 // Petit chargeur de .env local (facultatif) — évite une dépendance
-// externe (dotenv) pour un besoin d'une seule variable. Sur l'hébergement
+// externe (dotenv) pour un besoin de quelques variables seulement. Sur l'hébergement
 // (Infomaniak…), ADMIN_PASSWORD se règle plutôt via les variables
 // d'environnement du panneau d'administration ; ce fichier ne sert qu'au
 // confort en développement local. Ne touche jamais une variable déjà
@@ -117,8 +118,16 @@ function requireAdmin(req, res, next) {
 }
 
 app.post("/api/admin/login", (req, res) => {
-  if (!process.env.ADMIN_PASSWORD) {
-    return res.status(503).json({ error: "Mot de passe administrateur non configuré sur le serveur (variable ADMIN_PASSWORD, voir le README)." });
+  // ADMIN_PASSWORD_HASH (recommandé, voir hash-password.js : le mot de
+  // passe en clair ne touche alors jamais le disque) est préféré à
+  // ADMIN_PASSWORD (en clair, toujours accepté pour rester compatible
+  // avec les déploiements existants).
+  const configuredHash = process.env.ADMIN_PASSWORD_HASH;
+  const configuredPlain = process.env.ADMIN_PASSWORD;
+  if (!configuredHash && !configuredPlain) {
+    return res
+      .status(503)
+      .json({ error: "Mot de passe administrateur non configuré sur le serveur (variable ADMIN_PASSWORD_HASH ou ADMIN_PASSWORD, voir le README)." });
   }
 
   const ip = req.ip || req.socket.remoteAddress || "unknown";
@@ -127,7 +136,8 @@ app.post("/api/admin/login", (req, res) => {
   }
 
   const password = req.body && typeof req.body.password === "string" ? req.body.password : "";
-  if (!password || !safeCompare(password, process.env.ADMIN_PASSWORD)) {
+  const valid = !!password && (configuredHash ? verifyPassword(password, configuredHash) : safeCompare(password, configuredPlain));
+  if (!valid) {
     recordFailedAttempt(ip);
     return res.status(401).json({ error: "Mot de passe incorrect." });
   }
