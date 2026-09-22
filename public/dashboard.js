@@ -1,8 +1,12 @@
 /* ===================================================================
    Empreinte Numérique — tableau de bord enseignant
-   Affiche les statistiques agrégées et anonymes récupérées via
-   l'API du serveur Node (server.js). N'a aucun effet en hébergement
-   statique (GitHub Pages…) : l'état d'erreur l'explique.
+   Protégé par un mot de passe unique (ADMIN_PASSWORD côté serveur,
+   voir server.js) : l'écran de connexion s'affiche tant qu'aucune
+   session valide n'existe, et toutes les routes de données répondent
+   401 sans elle. Affiche ensuite les statistiques agrégées et
+   anonymes récupérées via l'API du serveur Node (server.js). N'a
+   aucun effet en hébergement statique (GitHub Pages…) : l'écran de
+   connexion l'indique dès la tentative de connexion.
 
    Une classe peut être sélectionnée via le sélecteur ou l'URL
    (?classe=5B) ; sans sélection, les statistiques combinent toutes
@@ -27,6 +31,88 @@
   const classSelect = document.getElementById("class-select");
   const scopeSummary = document.getElementById("scope-summary");
   const resetBtn = document.getElementById("reset-btn");
+
+  // ---- Connexion (mot de passe unique, session en mémoire côté serveur) ----
+
+  const loginStateEl = document.getElementById("login-state");
+  const appStateEl = document.getElementById("app-state");
+  const loginForm = document.getElementById("login-form");
+  const adminPasswordInput = document.getElementById("admin-password");
+  const loginError = document.getElementById("login-error");
+  const logoutBtn = document.getElementById("logout-btn");
+
+  function showApp() {
+    loginStateEl.hidden = true;
+    appStateEl.hidden = false;
+    logoutBtn.hidden = false;
+  }
+
+  function showLogin() {
+    appStateEl.hidden = true;
+    loginStateEl.hidden = false;
+    logoutBtn.hidden = true;
+  }
+
+  // À utiliser juste après un fetch() vers une route de données : si la
+  // session a expiré (ou n'a jamais existé), repasse à l'écran de
+  // connexion au lieu de laisser l'appelant afficher une erreur
+  // générique "serveur inaccessible", trompeuse dans ce cas précis.
+  function redirectToLoginIfUnauthorized(res) {
+    if (res.status === 401) {
+      showLogin();
+      return true;
+    }
+    return false;
+  }
+
+  async function checkAuth() {
+    try {
+      const res = await fetch("api/admin/session");
+      if (!res.ok) return false;
+      return !!(await res.json()).authenticated;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    loginError.hidden = true;
+    const submitBtn = loginForm.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+
+    try {
+      const res = await fetch("api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: adminPasswordInput.value }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        loginError.textContent = data.error || "Connexion impossible.";
+        loginError.hidden = false;
+        return;
+      }
+      adminPasswordInput.value = "";
+      showApp();
+      init();
+    } catch (e) {
+      loginError.textContent =
+        "Impossible de contacter le serveur. Ce tableau de bord nécessite que le site soit lancé avec le serveur Node inclus (voir le README).";
+      loginError.hidden = false;
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      await fetch("api/admin/logout", { method: "POST" });
+    } catch (e) {
+      /* pas grave : on repasse à l'écran de connexion de toute façon */
+    }
+    showLogin();
+  });
 
   function currentClasse() {
     return classSelect.value || "";
@@ -68,6 +154,7 @@
   async function populateClassSelect(preselect) {
     try {
       const res = await fetch("api/classes");
+      if (redirectToLoginIfUnauthorized(res)) return classSelect.value;
       if (res.ok) {
         knownClasses = (await res.json()).classes || [];
         writeCachedClasses(knownClasses);
@@ -110,6 +197,7 @@
     let submissions = [];
     try {
       const res = await fetch(`api/submissions?classe=${encodeURIComponent(classe)}`);
+      if (redirectToLoginIfUnauthorized(res)) return { excludedCount: 0 };
       if (!res.ok) throw new Error("bad status");
       submissions = (await res.json()).submissions || [];
     } catch (e) {
@@ -135,6 +223,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ included: checkbox.checked }),
           });
+          if (redirectToLoginIfUnauthorized(res)) return;
           if (!res.ok) throw new Error("bad status");
           const resolved = await populateClassSelect(currentClasse()); // rafraîchit le compte affiché dans le sélecteur
           loadStats(resolved, { silent: true }); // rafraîchit stats + liste, sans écran de chargement
@@ -177,6 +266,7 @@
     try {
       const url = classe ? `api/stats?classe=${encodeURIComponent(classe)}` : "api/stats";
       const res = await fetch(url);
+      if (redirectToLoginIfUnauthorized(res)) return;
       if (!res.ok) throw new Error("bad status");
       stats = await res.json();
     } catch (e) {
@@ -264,6 +354,7 @@
     try {
       const url = classe ? `api/submissions?classe=${encodeURIComponent(classe)}` : "api/submissions";
       const res = await fetch(url, { method: "DELETE" });
+      if (redirectToLoginIfUnauthorized(res)) return;
       if (!res.ok) throw new Error("bad status");
       const resolved = await populateClassSelect(classe);
       updateUrl(resolved);
@@ -299,5 +390,12 @@
     }
   })();
 
-  init();
+  (async function bootstrap() {
+    if (await checkAuth()) {
+      showApp();
+      init();
+    } else {
+      showLogin();
+    }
+  })();
 })();

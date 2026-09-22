@@ -1,3 +1,4 @@
 node_modules/
 empreinte.json
+.env
 .DS_Store

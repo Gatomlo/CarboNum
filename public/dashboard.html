@@ -20,37 +20,56 @@
     </svg>
     <span>Empreinte Numérique</span>
   </div>
-  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Changer de thème" title="Changer de thème">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4V2M12 22v-2M4 12H2M22 12h-2M5 5 3.6 3.6M20.4 20.4 19 19M19 5l1.4-1.4M3.6 20.4 5 19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-  </button>
+  <div class="topbar-actions">
+    <button id="logout-btn" class="btn btn-ghost btn-sm" type="button" hidden>Déconnexion</button>
+    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Changer de thème" title="Changer de thème">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4V2M12 22v-2M4 12H2M22 12h-2M5 5 3.6 3.6M20.4 20.4 19 19M19 5l1.4-1.4M3.6 20.4 5 19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+    </button>
+  </div>
 </header>
 
 <main>
   <div class="hero" style="padding-block: 24px 8px;">
     <p class="eyebrow">Espace enseignant</p>
     <h1 style="font-size: clamp(1.5rem, 5vw, 2.1rem);">Statistiques de la classe</h1>
-    <p class="lead">Résultats agrégés et anonymes partagés par les élèves. Rafraîchis la page pour voir les dernières contributions.</p>
-
-    <label class="field class-select-field">
-      <span>Classe affichée</span>
-      <select id="class-select">
-        <option value="">Toutes les classes (combiné)</option>
-      </select>
-    </label>
-    <p class="context-line" id="scope-summary"></p>
+    <p class="lead">Résultats agrégés et anonymes partagés par les élèves.</p>
   </div>
 
-  <div id="loading-state" class="empty-state">
-    <p>Chargement…</p>
+  <div id="login-state" class="card login-card" hidden>
+    <svg viewBox="0 0 48 48" aria-hidden="true" class="login-icon"><rect x="12" y="22" width="24" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M18 22v-6a6 6 0 0 1 12 0v6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    <p class="login-intro">Connexion requise pour accéder aux statistiques de la classe.</p>
+    <form id="login-form">
+      <label class="field">
+        <span>Mot de passe</span>
+        <input type="password" id="admin-password" autocomplete="current-password" required>
+      </label>
+      <button class="btn btn-primary" type="submit">Se connecter</button>
+      <p class="identity-error" id="login-error" hidden></p>
+    </form>
   </div>
 
-  <div id="error-state" class="error-state" hidden>
-    <p>Impossible de récupérer les statistiques. Ce tableau de bord nécessite que le site soit lancé avec le serveur Node inclus (voir le README du projet).</p>
-  </div>
+  <div id="app-state" hidden>
+    <div class="hero" style="padding-block: 0 8px;">
+      <label class="field class-select-field">
+        <span>Classe affichée</span>
+        <select id="class-select">
+          <option value="">Toutes les classes (combiné)</option>
+        </select>
+      </label>
+      <p class="context-line" id="scope-summary"></p>
+    </div>
 
-  <div id="content-block" class="results" hidden>
+    <div id="loading-state" class="empty-state">
+      <p>Chargement…</p>
+    </div>
 
-    <div id="no-data-note" class="empty-state" hidden>
+    <div id="error-state" class="error-state" hidden>
+      <p>Impossible de récupérer les statistiques. Ce tableau de bord nécessite que le site soit lancé avec le serveur Node inclus (voir le README du projet).</p>
+    </div>
+
+    <div id="content-block" class="results" hidden>
+
+      <div id="no-data-note" class="empty-state" hidden>
       <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 16v10M24 32h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       <p id="no-data-text">Aucune réponse comptabilisée pour l'instant.<br>Demande à tes élèves de calculer leur empreinte et de cliquer sur « Partager mon résultat » à la fin.</p>
     </div>
@@ -110,6 +129,7 @@
     </div>
 
     <button class="btn btn-ghost" id="reset-btn" type="button">↺ Réinitialiser les données de la classe</button>
+    </div>
   </div>
 
 </main>

@@ -28,9 +28,27 @@ npm start
 Le serveur démarre sur `http://localhost:3000` (modifiable via la variable d'environnement `PORT`) et sert l'application entière :
 
 - `http://localhost:3000/` — le calculateur, pour les élèves
-- `http://localhost:3000/dashboard.html` — le tableau de bord, pour l'enseignant·e
+- `http://localhost:3000/dashboard.html` — le tableau de bord, protégé par mot de passe (voir juste en dessous)
 
 **Usage en classe** : lance le serveur sur ton ordinateur avant le cours, puis donne aux élèves l'adresse IP locale de ta machine sur le réseau de la classe (ex. `http://192.168.1.42:3000`) pour qu'ils y accèdent depuis leur propre appareil. Tu peux aussi déployer tout le dépôt sur n'importe quel hébergeur Node gratuit (Render, Railway…) si tu veux une adresse stable, ou le monter derrière une passerelle mutualisée (voir « Déploiement derrière une passerelle » ci-dessous).
+
+#### Protéger le tableau de bord par mot de passe
+
+Le tableau de bord (statistiques et gestion des élèves) est protégé par un mot de passe unique, à définir via la variable d'environnement `ADMIN_PASSWORD` :
+
+```bash
+ADMIN_PASSWORD="un mot de passe" npm start
+```
+
+Ou, en développement local, crée un fichier `.env` à la racine du dépôt (jamais commité, déjà dans `.gitignore`) :
+
+```
+ADMIN_PASSWORD=un mot de passe
+```
+
+Sur un hébergeur (Render, Railway, Infomaniak…), règle plutôt `ADMIN_PASSWORD` dans les variables d'environnement de son panneau d'administration. **Tant qu'elle n'est pas définie, la connexion est refusée** (échec explicite, pas de mot de passe par défaut). Une fois connecté·e, la session reste valide 12 h ou jusqu'à la déconnexion (bouton « Déconnexion » en haut du tableau de bord) ; un redémarrage du serveur déconnecte tout le monde, sans conséquence pour les données.
+
+Sur la page du calculateur, un lien discret « Espace enseignant → » en bas de page mène au tableau de bord.
 
 À la fin du calculateur, **le résultat de chaque élève est transmis automatiquement** — ce n'est pas une action optionnelle : dès que le calcul est terminé, le total et la répartition par usage (avec la classe et le pseudo s'ils sont renseignés, mais jamais les réponses détaillées au questionnaire ni un nom) sont envoyés au serveur, sans que l'élève ait à cliquer sur quoi que ce soit. Un petit message discret confirme la transmission (ou explique qu'elle a échoué si le serveur est inaccessible). Le tableau de bord affiche ensuite en temps réel le nombre de réponses, l'empreinte minimale, maximale et moyenne du groupe, ainsi que le poste (smartphone, streaming, IA…) qui pèse le plus en moyenne. Un bouton permet de réinitialiser les données.
 
