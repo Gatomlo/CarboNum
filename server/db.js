@@ -21,7 +21,9 @@ db.exec(`
     tablette REAL NOT NULL,
     ordinateur REAL NOT NULL,
     objets REAL NOT NULL,
+    consoleTv REAL NOT NULL DEFAULT 0,
     streaming REAL NOT NULL,
+    visio REAL NOT NULL DEFAULT 0,
     ia REAL NOT NULL,
     included INTEGER NOT NULL DEFAULT 1
   )
@@ -37,6 +39,12 @@ if (!existingColumns.includes("eleve")) {
 }
 if (!existingColumns.includes("included")) {
   db.exec("ALTER TABLE submissions ADD COLUMN included INTEGER NOT NULL DEFAULT 1");
+}
+if (!existingColumns.includes("consoleTv")) {
+  db.exec("ALTER TABLE submissions ADD COLUMN consoleTv REAL NOT NULL DEFAULT 0");
+}
+if (!existingColumns.includes("visio")) {
+  db.exec("ALTER TABLE submissions ADD COLUMN visio REAL NOT NULL DEFAULT 0");
 }
 
 // Un même élève (classe+eleve non vides) ne compte qu'une fois : une

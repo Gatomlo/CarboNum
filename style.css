@@ -32,7 +32,9 @@
   --cat-tablette: #eb6834;
   --cat-ordinateur: #1baf7a;
   --cat-objets: #eda100;
+  --cat-consoleTv: #4a3aa7;
   --cat-streaming: #e87ba4;
+  --cat-visio: #e34948;
   --cat-ia: #008300;
 
   --radius: 14px;
@@ -300,6 +302,9 @@ fieldset.step.is-visible { display: block; animation: fade-in .3s ease; }
 
 .step-fields { display: flex; flex-direction: column; gap: 20px; }
 .step-fields.is-disabled { opacity: .4; pointer-events: none; }
+
+.sub-block + .sub-block { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); }
+.sub-block .step-hint { font-weight: 600; color: var(--ink); margin-bottom: 10px; }
 
 .field { display: flex; flex-direction: column; gap: 8px; font-size: .92rem; font-weight: 600; }
 .field span { color: var(--ink); }

@@ -1,8 +1,8 @@
 # Empreinte Numérique
 
-Petite application web pédagogique pour calculer l'empreinte carbone numérique des élèves : smartphone, tablette, ordinateur, objets connectés, streaming vidéo et IA générative, sur la durée de vie de leurs appareils.
+Petite application web pédagogique pour calculer l'empreinte carbone numérique des élèves : smartphone, tablette, ordinateur, objets connectés, console de jeux et TV connectée, streaming vidéo, visioconférence et IA générative, sur la durée de vie de leurs appareils.
 
-Le résultat est situé sur une échelle (jauge faible / moyen / élevé, comparée à la moyenne numérique estimée d'un habitant en Belgique) et traduit en équivalences concrètes : distance en avion, distance en voiture, nombre de bouteilles plastique, surface de forêt rasée.
+Le résultat est situé sur une échelle (jauge faible / moyen / élevé, comparée à un profil de référence — voir « Méthodologie ») et traduit en équivalences concrètes : distance en avion, distance en voiture, nombre de bouteilles plastique, surface de forêt rasée.
 
 ## Deux modes d'utilisation
 
@@ -61,9 +61,9 @@ Quand une classe précise est affichée dans le tableau de bord, une carte **« 
 
 ## Fonctionnement
 
-1. **Questionnaire en 6 étapes** : smartphone, tablette, ordinateur, objets connectés, streaming, IA générative. Pour chaque appareil, l'élève indique la durée de vie estimée du support et son usage habituel.
-2. **Calcul** : empreinte de fabrication de chaque appareil (amortie sur sa durée de vie déclarée) + empreinte d'usage annuelle (électricité, réseau, streaming, requêtes IA).
-3. **Résultat** : empreinte totale annuelle en kg CO2e/an, jauge de positionnement (repère : moyenne numérique estimée en Belgique), répartition par usage, et équivalences (km avion, km voiture, bouteilles plastique, m² de forêt rasée).
+1. **Questionnaire en 8 étapes** : smartphone, tablette, ordinateur, objets connectés, console de jeux & TV connectée, streaming, visioconférence, IA générative. Pour chaque appareil, l'élève indique la durée de vie estimée du support et son usage habituel.
+2. **Calcul** : empreinte de fabrication de chaque appareil (amortie sur sa durée de vie déclarée) + empreinte d'usage annuelle (électricité, réseau, streaming, visio, requêtes IA).
+3. **Résultat** : empreinte totale annuelle en kg CO2e/an, jauge de positionnement (repère : profil de référence calculé sur les mêmes catégories), répartition par usage, et équivalences (km avion, km voiture, bouteilles plastique, m² de forêt rasée).
 4. **Transmission automatique** du résultat vers les statistiques de la classe, si le serveur est lancé — sans action de l'élève.
 
 ## Méthodologie
@@ -74,12 +74,12 @@ Les coefficients utilisés sont des **ordres de grandeur pédagogiques**, constr
 - Arcep
 - GreenIT.fr
 - The Shift Project
-- Digital Wallonia / Bruxelles Environnement — étude *« Numérique et environnement »* (part du numérique dans les émissions belges)
+- Institut belge du Numérique Responsable (fabrication d'un ordinateur portable, intensité carbone de l'électricité en Belgique)
 - GIEC / FAO — ordres de grandeur d'émissions liées à la déforestation
 
 Ils ne remplacent pas un bilan carbone individuel précis, mais permettent de comparer des ordres de grandeur entre usages numériques et de les situer par rapport à des repères connus. Le détail des facteurs est visible directement dans l'application (section « Méthodologie & sources » sous les résultats) et dans `script.js`.
 
-**Repère belge** : il n'existe pas, à notre connaissance, d'étude belge dédiée à l'empreinte numérique par habitant équivalente à l'étude ADEME/Arcep pour la France. Le repère de ~170 kg CO2e/an utilisé ici est donc une **estimation**, obtenue en combinant la part du numérique dans les émissions belges (~2&nbsp;%, Digital Wallonia / Bruxelles Environnement) et l'empreinte carbone moyenne par habitant en Belgique (~8,5 t CO2e/an, territoriale). Si une étude belge plus précise existe, ce repère (`REFERENCE_MOYENNE_BE` dans `shared.js`) est à mettre à jour en conséquence.
+**Profil de référence** (~229 kg CO2e/an, marqué sur la jauge) : ce repère n'est **pas** une statistique nationale externe. Une première version comparait à un pourcentage du numérique dans les émissions belges (~2&nbsp;%, Digital Wallonia / Bruxelles Environnement) — mais ce périmètre couvre bien plus que ce que le quiz mesure (usages professionnels, stockage cloud, infrastructures…), ce qui rendait la comparaison trompeuse. Le repère est donc désormais **calculé avec le même modèle et les mêmes huit catégories** que le résultat de l'élève (voir `calculate()` dans `script.js`), à partir d'un usage moyen plausible — le détail du calcul est documenté en commentaire dans `shared.js`, à côté de `REFERENCE_MOYENNE_BE`. C'est un point de comparaison cohérent avec ce que l'app mesure, pas une mesure officielle de l'empreinte numérique moyenne en Belgique. Si le quiz évolue (nouvelle catégorie, facteur modifié), ce repère doit être recalculé en conséquence.
 
 ## Fichiers
 

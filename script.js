@@ -92,8 +92,19 @@
       manufacturingEach: 30,
       usageEach: 1.5, // kg CO2e/an par objet (veille, synchronisation)
     },
+    console: {
+      manufacturing: 150, // kg CO2e, console de jeux fixe (ordre de grandeur)
+      usagePerHourDay: 8, // kg CO2e/an par heure/jour de jeu (converti depuis h/semaine)
+    },
+    tv: {
+      manufacturing: 320, // kg CO2e, TV connectée grand écran (ordre de grandeur ADEME)
+      usagePerHourDay: 5, // kg CO2e/an par heure d'utilisation quotidienne
+    },
     streaming: {
       gPerHour: { sd: 30, hd: 70, uhd: 200 },
+    },
+    visio: {
+      gPerHour: 150, // g CO2e/h, appel vidéo bidirectionnel (ordre de grandeur entre HD et 4K)
     },
     ia: {
       gPerTextQuery: 3,
@@ -221,7 +232,12 @@
     ["pc-hours", "pc-hours-out"],
     ["obj-count", "obj-count-out"],
     ["obj-life", "obj-life-out"],
+    ["cs-life", "cs-life-out"],
+    ["cs-hours", "cs-hours-out"],
+    ["tv-life", "tv-life-out"],
+    ["tv-hours", "tv-hours-out"],
     ["st-hours", "st-hours-out"],
+    ["vc-hours", "vc-hours-out"],
     ["ia-text", "ia-text-out"],
     ["ia-img", "ia-img-out"],
   ].forEach(([r, o]) => bindRangeOutput(r, o));
@@ -241,6 +257,8 @@
   bindNoneToggle("sp-none", "sp-fields");
   bindNoneToggle("tb-none", "tb-fields");
   bindNoneToggle("pc-none", "pc-fields");
+  bindNoneToggle("cs-none", "cs-fields");
+  bindNoneToggle("tv-none", "tv-fields");
 
   // -------------------------------------------------------------
   // Calcul de l'empreinte
@@ -270,9 +288,22 @@
         count: parseFloat(document.getElementById("obj-count").value),
         life: parseFloat(document.getElementById("obj-life").value),
       },
+      console: {
+        none: document.getElementById("cs-none").checked,
+        life: parseFloat(document.getElementById("cs-life").value),
+        hoursWeek: parseFloat(document.getElementById("cs-hours").value),
+      },
+      tv: {
+        none: document.getElementById("tv-none").checked,
+        life: parseFloat(document.getElementById("tv-life").value),
+        hours: parseFloat(document.getElementById("tv-hours").value),
+      },
       streaming: {
         hoursWeek: parseFloat(document.getElementById("st-hours").value),
         quality,
+      },
+      visio: {
+        hoursWeek: parseFloat(document.getElementById("vc-hours").value),
       },
       ia: {
         textPerDay: parseFloat(document.getElementById("ia-text").value),
@@ -303,14 +334,35 @@
       (FACTORS.objetConnecte.manufacturingEach * data.objets.count) / data.objets.life +
       FACTORS.objetConnecte.usageEach * data.objets.count;
 
+    const consoleKg = data.console.none
+      ? 0
+      : FACTORS.console.manufacturing / data.console.life +
+        FACTORS.console.usagePerHourDay * (data.console.hoursWeek / 7);
+
+    const tvKg = data.tv.none
+      ? 0
+      : FACTORS.tv.manufacturing / data.tv.life + FACTORS.tv.usagePerHourDay * data.tv.hours;
+
+    result.consoleTv = consoleKg + tvKg;
+
     result.streaming =
       (data.streaming.hoursWeek * 52 * FACTORS.streaming.gPerHour[data.streaming.quality]) / 1000;
+
+    result.visio = (data.visio.hoursWeek * 52 * FACTORS.visio.gPerHour) / 1000;
 
     result.ia =
       (data.ia.textPerDay * 365 * FACTORS.ia.gPerTextQuery + data.ia.imgPerWeek * 52 * FACTORS.ia.gPerImage) /
       1000;
 
-    result.total = result.smartphone + result.tablette + result.ordinateur + result.objets + result.streaming + result.ia;
+    result.total =
+      result.smartphone +
+      result.tablette +
+      result.ordinateur +
+      result.objets +
+      result.consoleTv +
+      result.streaming +
+      result.visio +
+      result.ia;
 
     return result;
   }
@@ -368,8 +420,12 @@
       "Ton ordinateur domine ton empreinte numérique. Le prolonger de quelques années (nettoyage, changement de batterie ou de disque) a plus d'impact que n'importe quel réglage logiciel.",
     objets:
       "Tes objets connectés cumulés pèsent lourd. Avant d'ajouter un nouvel objet connecté, demande-toi s'il t'est vraiment utile : chaque objet ajoute sa propre fabrication à l'empreinte totale.",
+    consoleTv:
+      "Ta console de jeux et/ou ta TV connectée dominent ton empreinte : ce sont des appareils lourds à fabriquer. Les garder plus longtemps (plutôt que de changer de modèle à chaque nouvelle génération) est le levier le plus efficace.",
     streaming:
       "Le streaming vidéo domine ton empreinte. Regarder en HD plutôt qu'en 4K quand ce n'est pas nécessaire (petit écran, mobile) peut diviser cet impact par 2 à 3.",
+    visio:
+      "La visioconférence domine ton empreinte. Couper sa caméra quand ce n'est pas nécessaire, ou baisser la résolution, réduit sensiblement l'impact de chaque appel.",
     ia: "Tes usages d'IA générative pèsent particulièrement dans ton empreinte. Réserver l'IA générative aux tâches qui en ont vraiment besoin, plutôt qu'à une simple recherche, réduit sensiblement ton empreinte.",
   };
 
@@ -413,11 +469,11 @@
     const diffPct = ((result.total - REFERENCE_MOYENNE_BE) / REFERENCE_MOYENNE_BE) * 100;
     const contextEl = document.getElementById("result-context");
     if (Math.abs(diffPct) < 3) {
-      contextEl.textContent = "C'est très proche de la moyenne numérique estimée d'un habitant en Belgique (~170 kg CO2e/an).";
+      contextEl.textContent = "C'est très proche du profil de référence (usage numérique moyen sur ces mêmes catégories, ~229 kg CO2e/an).";
     } else if (diffPct < 0) {
-      contextEl.textContent = `Soit environ ${fmt(Math.abs(diffPct), 0)} % de moins que la moyenne numérique estimée d'un habitant en Belgique (~170 kg CO2e/an).`;
+      contextEl.textContent = `Soit environ ${fmt(Math.abs(diffPct), 0)} % de moins que le profil de référence (usage numérique moyen sur ces mêmes catégories, ~229 kg CO2e/an).`;
     } else {
-      contextEl.textContent = `Soit environ ${fmt(diffPct, 0)} % de plus que la moyenne numérique estimée d'un habitant en Belgique (~170 kg CO2e/an).`;
+      contextEl.textContent = `Soit environ ${fmt(diffPct, 0)} % de plus que le profil de référence (usage numérique moyen sur ces mêmes catégories, ~229 kg CO2e/an).`;
     }
 
     renderGauge(result.total);

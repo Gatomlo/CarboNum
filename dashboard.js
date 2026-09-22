@@ -230,11 +230,11 @@
       const diffPct = ((stats.avg - REFERENCE_MOYENNE_BE) / REFERENCE_MOYENNE_BE) * 100;
       const avgContext = document.getElementById("avg-context");
       if (Math.abs(diffPct) < 3) {
-        avgContext.textContent = "Cette moyenne est très proche de la moyenne numérique estimée d'un habitant en Belgique (~170 kg CO2e/an).";
+        avgContext.textContent = "Cette moyenne est très proche du profil de référence (usage numérique moyen sur ces mêmes catégories, ~229 kg CO2e/an).";
       } else if (diffPct < 0) {
-        avgContext.textContent = `Soit environ ${fmt(Math.abs(diffPct), 0)} % de moins que la moyenne numérique estimée d'un habitant en Belgique (~170 kg CO2e/an).`;
+        avgContext.textContent = `Soit environ ${fmt(Math.abs(diffPct), 0)} % de moins que le profil de référence (usage numérique moyen sur ces mêmes catégories, ~229 kg CO2e/an).`;
       } else {
-        avgContext.textContent = `Soit environ ${fmt(diffPct, 0)} % de plus que la moyenne numérique estimée d'un habitant en Belgique (~170 kg CO2e/an).`;
+        avgContext.textContent = `Soit environ ${fmt(diffPct, 0)} % de plus que le profil de référence (usage numérique moyen sur ces mêmes catégories, ~229 kg CO2e/an).`;
       }
 
       renderGaugeInto(

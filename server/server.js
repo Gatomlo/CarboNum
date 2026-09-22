@@ -9,7 +9,7 @@ const path = require("path");
 const express = require("express");
 const db = require("./db");
 
-const CATEGORIES = ["smartphone", "tablette", "ordinateur", "objets", "streaming", "ia"];
+const CATEGORIES = ["smartphone", "tablette", "ordinateur", "objets", "consoleTv", "streaming", "visio", "ia"];
 const MAX_PLAUSIBLE_KG = 10000; // garde-fou anti-abus, très au-delà d'un cas réel
 const MAX_LABEL_LEN = 60;
 
@@ -61,21 +61,25 @@ app.post("/api/submit", (req, res) => {
   const eleve = sanitizeLabel(body.eleve);
   const params = { created_at: new Date().toISOString(), classe, eleve, total: body.total, ...values };
 
+  // Colonnes générées depuis CATEGORIES pour éviter la duplication
+  // manuelle à chaque ajout de catégorie.
+  const columns = ["created_at", "classe", "eleve", "total", ...CATEGORIES];
+  const placeholders = columns.map((c) => `@${c}`).join(", ");
+
   // Avec classe + élève renseignés, une nouvelle réponse remplace la
   // précédente du même élève (upsert) plutôt que de créer un doublon.
   const sql =
     classe && eleve
       ? `
-    INSERT INTO submissions (created_at, classe, eleve, total, smartphone, tablette, ordinateur, objets, streaming, ia)
-    VALUES (@created_at, @classe, @eleve, @total, @smartphone, @tablette, @ordinateur, @objets, @streaming, @ia)
+    INSERT INTO submissions (${columns.join(", ")})
+    VALUES (${placeholders})
     ON CONFLICT(classe, eleve) WHERE classe != '' AND eleve != ''
-    DO UPDATE SET created_at = excluded.created_at, total = excluded.total, smartphone = excluded.smartphone,
-      tablette = excluded.tablette, ordinateur = excluded.ordinateur, objets = excluded.objets,
-      streaming = excluded.streaming, ia = excluded.ia
+    DO UPDATE SET created_at = excluded.created_at, total = excluded.total,
+      ${CATEGORIES.map((c) => `${c} = excluded.${c}`).join(", ")}
   `
       : `
-    INSERT INTO submissions (created_at, classe, eleve, total, smartphone, tablette, ordinateur, objets, streaming, ia)
-    VALUES (@created_at, @classe, @eleve, @total, @smartphone, @tablette, @ordinateur, @objets, @streaming, @ia)
+    INSERT INTO submissions (${columns.join(", ")})
+    VALUES (${placeholders})
   `;
 
   db.prepare(sql).run(params);

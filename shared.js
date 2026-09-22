@@ -6,25 +6,43 @@
 (function (global) {
   "use strict";
 
-  // kg CO2e/an, estimation de l'empreinte numérique moyenne d'un habitant
-  // de Belgique. Faute d'étude belge dédiée équivalente à l'étude ADEME/
-  // Arcep pour la France, ce repère combine : la part du numérique dans
-  // les émissions belges (~2 %, Digital Wallonia / Bruxelles Environnement,
-  // étude "Numérique et environnement") et l'empreinte carbone moyenne par
-  // habitant en Belgique (~8,5 t CO2e/an, territoriale — écoconso/Our World
-  // in Data). Ordre de grandeur pédagogique, pas une mesure officielle.
-  const REFERENCE_MOYENNE_BE = 170;
+  // kg CO2e/an — repère de comparaison affiché sur la jauge.
+  //
+  // Construit à dessein avec les MÊMES catégories et le MÊME modèle de
+  // calcul que ce quiz (voir FACTORS et calculate() dans script.js),
+  // plutôt qu'avec une statistique belge externe (part du numérique
+  // dans les émissions nationales, etc.) : cette dernière couvre un
+  // périmètre bien plus large (usages professionnels, stockage cloud,
+  // infrastructures...) que ce que le quiz mesure réellement, ce qui
+  // rendait la comparaison trompeuse. Le repère est donc la somme des
+  // huit catégories du quiz pour un "profil moyen" plausible :
+  //   smartphone (milieu de gamme, 3 ans, 4h/j)      ≈  29,7 kg
+  //   tablette (4 ans, 5h/semaine)                    ≈  29,3 kg
+  //   ordinateur (portable, 5 ans, 3h/j)               ≈  58,0 kg
+  //   objets connectés (1 objet, 4 ans)                ≈   9,0 kg
+  //   console & TV (pas de console ; TV 7 ans, 2h/j)   ≈  55,7 kg
+  //   streaming vidéo (7h/semaine, HD)                 ≈  25,5 kg
+  //   visioconférence (2h/semaine)                     ≈  15,6 kg
+  //   IA générative (5 requêtes/j, 1 image/semaine)    ≈   6,5 kg
+  //                                                  total ≈ 229 kg CO2e/an
+  // Un profil moyen reste une simplification pédagogique (il mélange
+  // propriétaires et non-propriétaires de chaque appareil) : ce n'est
+  // pas une mesure officielle, mais un point de comparaison cohérent
+  // avec ce que le quiz mesure réellement.
+  const REFERENCE_MOYENNE_BE = 229;
   const GAUGE_MAX = 600; // kg CO2e/an, échelle max affichée sur la jauge
   const GAUGE_BANDS = [150, 350, GAUGE_MAX]; // bornes faible / moyen / élevé
 
-  const CATEGORIES = ["smartphone", "tablette", "ordinateur", "objets", "streaming", "ia"];
+  const CATEGORIES = ["smartphone", "tablette", "ordinateur", "objets", "consoleTv", "streaming", "visio", "ia"];
 
   const CATEGORY_META = {
     smartphone: { label: "Smartphone", article: "le smartphone", color: "var(--cat-smartphone)" },
     tablette: { label: "Tablette", article: "la tablette", color: "var(--cat-tablette)" },
     ordinateur: { label: "Ordinateur", article: "l'ordinateur", color: "var(--cat-ordinateur)" },
     objets: { label: "Objets connectés", article: "les objets connectés", color: "var(--cat-objets)" },
+    consoleTv: { label: "Console & TV", article: "la console ou la télé connectée", color: "var(--cat-consoleTv)" },
     streaming: { label: "Streaming", article: "le streaming", color: "var(--cat-streaming)" },
+    visio: { label: "Visioconférence", article: "la visioconférence", color: "var(--cat-visio)" },
     ia: { label: "IA générative", article: "l'IA générative", color: "var(--cat-ia)" },
   };
 
