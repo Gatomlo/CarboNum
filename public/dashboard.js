@@ -51,11 +51,6 @@
   const setupPasswordConfirmInput = document.getElementById("setup-password-confirm");
   const setupError = document.getElementById("setup-error");
 
-  // "env" si une variable d'environnement du serveur fait autorité sur le
-  // mot de passe (voir server.js) : la carte "Changer le mot de passe"
-  // est alors désactivée, puisqu'elle n'aurait aucun effet.
-  let currentPasswordSource = null;
-
   function showApp() {
     setupStateEl.hidden = true;
     loginStateEl.hidden = true;
@@ -92,10 +87,10 @@
   async function fetchSessionInfo() {
     try {
       const res = await fetch("api/admin/session");
-      if (!res.ok) return { authenticated: false, configured: true, source: null };
+      if (!res.ok) return { authenticated: false, configured: true };
       return await res.json();
     } catch (e) {
-      return { authenticated: false, configured: true, source: null };
+      return { authenticated: false, configured: true };
     }
   }
 
@@ -118,7 +113,6 @@
         return;
       }
       adminPasswordInput.value = "";
-      currentPasswordSource = "db";
       showApp();
       init();
     } catch (e) {
@@ -161,7 +155,6 @@
       }
       setupPasswordInput.value = "";
       setupPasswordConfirmInput.value = "";
-      currentPasswordSource = "db";
       showApp();
       init();
     } catch (e) {
@@ -183,24 +176,11 @@
 
   // ---- Changer le mot de passe (depuis le tableau de bord, une fois connecté·e) ----
 
-  const changePwCard = document.getElementById("change-pw-card");
-  const changePwHint = document.getElementById("change-pw-hint");
   const changePwForm = document.getElementById("change-pw-form");
   const changePwNewInput = document.getElementById("change-pw-new");
   const changePwConfirmInput = document.getElementById("change-pw-confirm");
   const changePwError = document.getElementById("change-pw-error");
   const changePwSuccess = document.getElementById("change-pw-success");
-
-  function renderChangePasswordCard() {
-    if (currentPasswordSource === "env") {
-      changePwForm.hidden = true;
-      changePwHint.textContent =
-        "Le mot de passe est actuellement géré par une variable d'environnement du serveur (ADMIN_PASSWORD ou ADMIN_PASSWORD_HASH) : retire-la pour pouvoir le changer depuis ce tableau de bord.";
-    } else {
-      changePwForm.hidden = false;
-      changePwHint.textContent = "Le nouveau mot de passe s'applique à la prochaine connexion (la session en cours reste active).";
-    }
-  }
 
   changePwForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -235,8 +215,6 @@
       }
       changePwNewInput.value = "";
       changePwConfirmInput.value = "";
-      currentPasswordSource = data.source || currentPasswordSource;
-      renderChangePasswordCard();
       changePwSuccess.hidden = false;
     } catch (e) {
       changePwError.textContent = "Impossible de contacter le serveur.";
@@ -623,8 +601,6 @@
 
   (async function bootstrap() {
     const session = await fetchSessionInfo();
-    currentPasswordSource = session.source || null;
-    renderChangePasswordCard();
 
     if (session.authenticated) {
       showApp();

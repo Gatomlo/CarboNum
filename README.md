@@ -38,21 +38,7 @@ Le tableau de bord (statistiques et gestion des élèves) est protégé par un m
 
 ⚠️ Tant que ce mot de passe n'a pas encore été défini, **n'importe qui connaissant l'URL du tableau de bord pourrait le définir à ta place** (premier arrivé, premier servi — il n'y a pas encore de compte à protéger). Fais-le donc dès que le déploiement est en ligne, avant de partager l'adresse du calculateur avec les élèves.
 
-**Option avancée — variable d'environnement (secours en cas de perte d'accès)**
-
-Si tu préfères, ou si tu perds l'accès au tableau de bord, une variable d'environnement `ADMIN_PASSWORD_HASH` (ou, en clair, `ADMIN_PASSWORD`) reste prioritaire sur le mot de passe stocké — pratique pour reprendre la main sans toucher à `empreinte.json`. Pour générer un hash sans jamais écrire le mot de passe en clair sur disque :
-
-```bash
-node hash-password.js
-```
-
-Il demande le mot de passe en saisie masquée (rien ne s'affiche à l'écran), puis affiche une ligne à coller dans `.env` (en développement local, jamais commité, déjà dans `.gitignore`) ou dans les variables d'environnement du panneau de l'hébergeur (Render, Railway, Infomaniak…) :
-
-```
-ADMIN_PASSWORD_HASH=scrypt$...$...
-```
-
-Tant qu'une telle variable est définie, la carte « Changer le mot de passe » du tableau de bord est désactivée (elle n'aurait aucun effet) ; retire la variable pour reprendre la main depuis l'interface.
+Aucune variable d'environnement n'intervient dans la connexion : le mot de passe vit uniquement dans les données de classe (`empreinte.json`), rien à régler sur l'hébergeur. En cas de perte d'accès, la seule façon de repartir à zéro est de supprimer (ou renommer) `empreinte.json` sur le serveur et de redémarrer l'application — l'écran de création réapparaît, mais **cela efface aussi toutes les réponses des élèves déjà collectées**, donc à faire seulement en dernier recours (pense à exporter en CSV avant, si possible).
 
 Une fois connecté·e, la session reste valide 12 h ou jusqu'à la déconnexion (bouton « Déconnexion » en haut du tableau de bord) ; un redémarrage du serveur déconnecte tout le monde, sans conséquence pour les données.
 
@@ -148,6 +134,5 @@ Ils ne remplacent pas un bilan carbone individuel précis, mais permettent de co
 - `public/projection.js` — logique du mode projection (connexion, actualisation automatique)
 - `server.js` — petit serveur Node.js + Express (statique + API des statistiques de classe), exporte l'app Express pour être montable derrière une passerelle
 - `db.js` — stockage JSON local (`empreinte.json`, créé à la racine, hors de `public/`), sans dépendance native
-- `password-hash.js` — hachage/vérification du mot de passe administrateur (scrypt, intégré à Node)
-- `hash-password.js` — outil en ligne de commande pour générer un `ADMIN_PASSWORD_HASH` (voir « Protéger le tableau de bord par mot de passe »)
+- `password-hash.js` — hachage/vérification du mot de passe administrateur (scrypt, intégré à Node), stocké via `db.js`
 - `package.json` — dépendances (`express` uniquement), `npm start` lance `server.js`

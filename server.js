@@ -22,11 +22,14 @@ const db = require("./db");
 const { hashPassword, verifyPassword } = require("./password-hash");
 
 // Petit chargeur de .env local (facultatif) — évite une dépendance
-// externe (dotenv) pour un besoin de quelques variables seulement. Sur l'hébergement
-// (Infomaniak…), ADMIN_PASSWORD se règle plutôt via les variables
-// d'environnement du panneau d'administration ; ce fichier ne sert qu'au
-// confort en développement local. Ne touche jamais une variable déjà
-// définie par l'environnement réel.
+// externe (dotenv) pour un besoin d'une seule variable (PORT). Sur
+// l'hébergement (Infomaniak…), on règle plutôt PORT via les variables
+// d'environnement du panneau d'administration si besoin ; ce fichier ne
+// sert qu'au confort en développement local. Ne touche jamais une
+// variable déjà définie par l'environnement réel. Le mot de passe
+// administrateur, lui, ne passe plus par ici du tout (voir plus bas) :
+// il est saisi via le tableau de bord et stocké haché dans les données
+// de classe.
 (function loadDotEnv() {
   const envPath = path.join(__dirname, ".env");
   if (!fs.existsSync(envPath)) return;
@@ -59,35 +62,20 @@ app.use(express.static(path.join(__dirname, "public")));
 // Session en mémoire (pas de dépendance à express-session) : un
 // redémarrage du serveur déconnecte, ce qui est sans conséquence ici.
 //
-// Le mot de passe (haché, voir password-hash.js) est normalement stocké
-// avec les données de classe (db.js / empreinte.json) : défini une
-// première fois depuis le tableau de bord lui-même (POST
-// /api/admin/setup), pas besoin de configurer quoi que ce soit sur le
-// serveur. Si les variables d'environnement ADMIN_PASSWORD_HASH ou
-// ADMIN_PASSWORD sont définies, elles sont prioritaires sur la valeur
-// stockée — utile en secours si l'accès est perdu, sans avoir à toucher
-// au fichier de données.
+// Le mot de passe (haché, voir password-hash.js) est stocké avec les
+// données de classe (db.js / empreinte.json) : défini une première fois
+// depuis le tableau de bord lui-même (POST /api/admin/setup), rien à
+// configurer sur le serveur — pas de variable d'environnement, pas de
+// fichier. Il peut ensuite être changé à tout moment depuis le tableau
+// de bord.
 // -------------------------------------------------------------------
 
-// true dès qu'un mot de passe est configuré, par n'importe quelle voie.
 function isPasswordConfigured() {
-  return !!(process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD || db.getAdminPasswordHash());
-}
-
-// "env" si une variable d'environnement fait autorité (le mot de passe
-// stocké, s'il y en a un, est alors ignoré côté connexion — changer le
-// mot de passe depuis le tableau de bord n'aurait donc aucun effet tant
-// qu'elle reste définie) ; "db" si c'est la valeur stockée ; sinon null.
-function passwordSource() {
-  if (process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD) return "env";
-  if (db.getAdminPasswordHash()) return "db";
-  return null;
+  return !!db.getAdminPasswordHash();
 }
 
 function checkPassword(password) {
   if (!password) return false;
-  if (process.env.ADMIN_PASSWORD_HASH) return verifyPassword(password, process.env.ADMIN_PASSWORD_HASH);
-  if (process.env.ADMIN_PASSWORD) return safeCompare(password, process.env.ADMIN_PASSWORD);
   const stored = db.getAdminPasswordHash();
   return stored ? verifyPassword(password, stored) : false;
 }
@@ -100,12 +88,6 @@ const sessions = new Map(); // token -> expiresAt
 const MAX_ATTEMPTS = 10;
 const LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
 const failedAttempts = new Map(); // ip -> [timestamps]
-
-function safeCompare(a, b) {
-  const ha = crypto.createHash("sha256").update(String(a)).digest();
-  const hb = crypto.createHash("sha256").update(String(b)).digest();
-  return crypto.timingSafeEqual(ha, hb);
-}
 
 function isLockedOut(ip) {
   const attempts = (failedAttempts.get(ip) || []).filter((t) => Date.now() - t < LOCKOUT_WINDOW_MS);
@@ -192,16 +174,16 @@ app.post("/api/admin/logout", (req, res) => {
 
 app.get("/api/admin/session", (req, res) => {
   const token = parseCookies(req)[SESSION_COOKIE];
-  res.json({ authenticated: isValidSession(token), configured: isPasswordConfigured(), source: passwordSource() });
+  res.json({ authenticated: isValidSession(token), configured: isPasswordConfigured() });
 });
 
 // Définit le mot de passe administrateur la toute première fois — sans
 // authentification préalable, puisque personne ne peut encore se
 // connecter. Volontairement à usage unique (refusé dès qu'un mot de
-// passe existe déjà, par n'importe quelle voie) : sinon n'importe qui
-// connaissant l'URL du tableau de bord pourrait s'approprier le compte.
-// Voir le README pour la fenêtre d'exposition que ça implique tant que
-// le mot de passe n'a pas encore été défini.
+// passe existe déjà) : sinon n'importe qui connaissant l'URL du tableau
+// de bord pourrait s'approprier le compte. Voir le README pour la
+// fenêtre d'exposition que ça implique tant que le mot de passe n'a pas
+// encore été défini.
 app.post("/api/admin/setup", (req, res) => {
   if (isPasswordConfigured()) {
     return res.status(409).json({ error: "Un mot de passe est déjà configuré." });
@@ -216,17 +198,14 @@ app.post("/api/admin/setup", (req, res) => {
   res.json({ ok: true });
 });
 
-// Change le mot de passe stocké — nécessite une session valide. Sans
-// effet tant qu'une variable d'environnement fait autorité (voir
-// passwordSource ci-dessus) : la nouvelle valeur est bien enregistrée,
-// mais ignorée côté connexion tant que cette variable reste définie.
+// Change le mot de passe stocké — nécessite une session valide.
 app.post("/api/admin/change-password", requireAdmin, (req, res) => {
   const password = req.body && typeof req.body.password === "string" ? req.body.password : "";
   if (password.length < 8) {
     return res.status(400).json({ error: "Le mot de passe doit contenir au moins 8 caractères." });
   }
   db.setAdminPasswordHash(hashPassword(password));
-  res.json({ ok: true, source: passwordSource() });
+  res.json({ ok: true });
 });
 
 function isValidNumber(n) {
