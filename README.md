@@ -18,7 +18,7 @@ Tout le calcul s'exécute dans le navigateur. En fin de parcours, l'application 
 
 ### 2. Calculateur + statistiques de classe (avec le petit serveur Node)
 
-Pour agréger les résultats de plusieurs élèves (empreinte minimale/maximale, moyenne de la classe, poste qui pèse le plus en moyenne), l'application inclut un petit serveur Node.js avec une base SQLite locale (un seul fichier, aucune donnée identifiante stockée).
+Pour agréger les résultats de plusieurs élèves (empreinte minimale/maximale, moyenne de la classe, poste qui pèse le plus en moyenne), l'application inclut un petit serveur Node.js avec un stockage local en JSON (un seul fichier, aucune donnée identifiante stockée, aucune dépendance native — voir « Déploiement derrière une passerelle » pour le pourquoi).
 
 ```bash
 npm install
@@ -64,9 +64,10 @@ Sur un hébergement qui n'autorise qu'une seule application Node.js (ex. Infoman
 
 - `server.js` **exporte l'app Express** (`module.exports = app`) plutôt que d'appeler `app.listen()` inconditionnellement — lancé directement (`npm start`), il continue de démarrer son propre serveur normalement (le `app.listen()` est gardé par `if (require.main === module)`), mais une passerelle peut aussi faire `app.use('/mon-outil', require('./server.js'))` sans rien modifier.
 - Le code client (`public/script.js`, `public/dashboard.js`) n'utilise que des **chemins relatifs** (`api/submit`, jamais `/api/submit`) : Express retire automatiquement le préfixe de montage côté serveur, et les chemins relatifs se résolvent correctement côté navigateur, que l'app soit servie à la racine ou sous un sous-dossier.
-- Le dossier `public/` est le seul servi en statique (`express.static`) — le code serveur, `package.json` et la base SQLite (`empreinte.db`, créée à la racine du dépôt) restent hors de portée du navigateur.
+- Le dossier `public/` est le seul servi en statique (`express.static`) — le code serveur, `package.json` et le fichier de données (`empreinte.json`, créé à la racine du dépôt) restent hors de portée du navigateur.
+- **Aucune dépendance native** : le stockage des réponses (`db.js`) est un simple fichier JSON lu/écrit avec le module `fs` intégré à Node, pas une base SQLite. Un hébergement mutualisé qui n'a pas de compilateur (ou pas de binaire précompilé pour sa configuration exacte) échouerait à installer un module natif comme `better-sqlite3` — l'app n'en dépend donc plus du tout.
 
-Aucune configuration supplémentaire n'est nécessaire : `npm install` à la racine installe tout, et `server.js` (ou le champ `main` de `package.json`, qui pointe déjà dessus) est le point d'entrée que la passerelle trouve par convention.
+Aucune configuration supplémentaire n'est nécessaire : `npm install` à la racine installe tout (uniquement `express`), et `server.js` (ou le champ `main` de `package.json`, qui pointe déjà dessus) est le point d'entrée que la passerelle trouve par convention.
 
 ## Fonctionnement
 
@@ -99,5 +100,5 @@ Ils ne remplacent pas un bilan carbone individuel précis, mais permettent de co
 - `public/script.js` — logique du calculateur (calcul, jauge, graphiques, transmission automatique du résultat)
 - `public/dashboard.js` — logique du tableau de bord (récupération et affichage des statistiques)
 - `server.js` — petit serveur Node.js + Express (statique + API des statistiques de classe), exporte l'app Express pour être montable derrière une passerelle
-- `db.js` — base SQLite locale (créée à la racine, hors de `public/`)
-- `package.json` — dépendances (`express`, `better-sqlite3`), `npm start` lance `server.js`
+- `db.js` — stockage JSON local (`empreinte.json`, créé à la racine, hors de `public/`), sans dépendance native
+- `package.json` — dépendances (`express` uniquement), `npm start` lance `server.js`

@@ -1,4 +1,3 @@
 node_modules/
-empreinte.db
-empreinte.db-journal
+empreinte.json
 .DS_Store

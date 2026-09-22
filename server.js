@@ -1,5 +1,5 @@
 // Sert l'application statique (public/) et expose une API minimale pour
-// les statistiques de classe (base SQLite locale, données anonymes
+// les statistiques de classe (stockage JSON local, données anonymes
 // uniquement — aucun nom, aucune adresse IP stockée). "classe" et
 // "eleve" sont des libellés libres passés en paramètre d'URL par
 // l'enseignant·e (ex. ?classe=5B&eleve=12), pas des données d'identité.
@@ -70,30 +70,10 @@ app.post("/api/submit", (req, res) => {
 
   const classe = sanitizeLabel(body.classe);
   const eleve = sanitizeLabel(body.eleve);
-  const params = { created_at: new Date().toISOString(), classe, eleve, total: body.total, ...values };
-
-  // Colonnes générées depuis CATEGORIES pour éviter la duplication
-  // manuelle à chaque ajout de catégorie.
-  const columns = ["created_at", "classe", "eleve", "total", ...CATEGORIES];
-  const placeholders = columns.map((c) => `@${c}`).join(", ");
 
   // Avec classe + élève renseignés, une nouvelle réponse remplace la
   // précédente du même élève (upsert) plutôt que de créer un doublon.
-  const sql =
-    classe && eleve
-      ? `
-    INSERT INTO submissions (${columns.join(", ")})
-    VALUES (${placeholders})
-    ON CONFLICT(classe, eleve) WHERE classe != '' AND eleve != ''
-    DO UPDATE SET created_at = excluded.created_at, total = excluded.total,
-      ${CATEGORIES.map((c) => `${c} = excluded.${c}`).join(", ")}
-  `
-      : `
-    INSERT INTO submissions (${columns.join(", ")})
-    VALUES (${placeholders})
-  `;
-
-  db.prepare(sql).run(params);
+  db.upsertSubmission({ created_at: new Date().toISOString(), classe, eleve, total: body.total, ...values });
   res.json({ ok: true });
 });
 
@@ -102,11 +82,14 @@ app.post("/api/submit", (req, res) => {
 // tous les élèves seraient exclus doit rester sélectionnable pour être
 // gérée. Le compte affiché ne porte que sur les réponses comptabilisées.
 app.get("/api/classes", (req, res) => {
-  const classes = db
-    .prepare(
-      `SELECT classe, SUM(included) as count FROM submissions WHERE classe != '' GROUP BY classe ORDER BY classe COLLATE NOCASE`
-    )
-    .all();
+  const countByClasse = {};
+  for (const r of db.getAll()) {
+    if (!r.classe) continue;
+    countByClasse[r.classe] = (countByClasse[r.classe] || 0) + (r.included ? 1 : 0);
+  }
+  const classes = Object.keys(countByClasse)
+    .sort((a, b) => a.localeCompare(b, "fr", { sensitivity: "base" }))
+    .map((classe) => ({ classe, count: countByClasse[classe] }));
   res.json({ classes });
 });
 
@@ -115,15 +98,12 @@ app.get("/api/classes", (req, res) => {
 // deux cas, seules les réponses non exclues (included = 1) comptent.
 app.get("/api/stats", (req, res) => {
   const classe = sanitizeLabel(req.query.classe || "");
-  const rows = classe
-    ? db.prepare("SELECT * FROM submissions WHERE classe = ? AND included = 1").all(classe)
-    : db.prepare("SELECT * FROM submissions WHERE included = 1").all();
+  const all = db.getAll();
+  const rows = all.filter((r) => r.included && (!classe || r.classe === classe));
 
   const stats = computeStats(rows);
   if (!classe) {
-    stats.classesCount = db
-      .prepare("SELECT COUNT(DISTINCT classe) as n FROM submissions WHERE classe != '' AND included = 1")
-      .get().n;
+    stats.classesCount = new Set(all.filter((r) => r.classe && r.included).map((r) => r.classe)).size;
   }
   res.json(stats);
 });
@@ -136,10 +116,10 @@ app.get("/api/submissions", (req, res) => {
     return res.status(400).json({ error: "paramètre classe requis" });
   }
   const rows = db
-    .prepare(
-      "SELECT id, eleve, total, included, created_at FROM submissions WHERE classe = ? ORDER BY total DESC"
-    )
-    .all(classe);
+    .getAll()
+    .filter((r) => r.classe === classe)
+    .sort((a, b) => b.total - a.total)
+    .map((r) => ({ id: r.id, eleve: r.eleve, total: r.total, included: r.included, created_at: r.created_at }));
   res.json({ submissions: rows });
 });
 
@@ -151,8 +131,7 @@ app.patch("/api/submissions/:id", (req, res) => {
   if (!Number.isInteger(id) || typeof included !== "boolean") {
     return res.status(400).json({ error: "paramètres invalides" });
   }
-  const result = db.prepare("UPDATE submissions SET included = ? WHERE id = ?").run(included ? 1 : 0, id);
-  if (result.changes === 0) {
+  if (!db.setIncluded(id, included)) {
     return res.status(404).json({ error: "introuvable" });
   }
   res.json({ ok: true });
@@ -164,9 +143,9 @@ app.patch("/api/submissions/:id", (req, res) => {
 app.delete("/api/submissions", (req, res) => {
   const classe = sanitizeLabel(req.query.classe || "");
   if (classe) {
-    db.prepare("DELETE FROM submissions WHERE classe = ?").run(classe);
+    db.deleteByClasse(classe);
   } else {
-    db.prepare("DELETE FROM submissions").run();
+    db.deleteAll();
   }
   res.json({ ok: true });
 });
