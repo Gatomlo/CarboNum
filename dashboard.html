@@ -42,60 +42,68 @@
     <p>Chargement…</p>
   </div>
 
-  <div id="empty-state" class="empty-state" hidden>
-    <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 16v10M24 32h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    <p>Aucune donnée pour l'instant.<br>Demande à tes élèves de calculer leur empreinte et de cliquer sur « Partager mon résultat » à la fin.</p>
-  </div>
-
   <div id="error-state" class="error-state" hidden>
     <p>Impossible de récupérer les statistiques. Ce tableau de bord nécessite que le site soit lancé avec le serveur Node inclus (voir <code>server/README</code> ou le README du projet).</p>
   </div>
 
-  <div id="results-block" class="results" hidden>
+  <div id="content-block" class="results" hidden>
 
-    <div class="card">
-      <h2 class="card-title">Vue d'ensemble</h2>
-      <div class="stat-grid">
-        <div class="stat-tile">
-          <p class="stat-tile-value" id="stat-count">–</p>
-          <p class="stat-tile-label">réponses</p>
-        </div>
-        <div class="stat-tile">
-          <p class="stat-tile-value" id="stat-min">–</p>
-          <p class="stat-tile-label">empreinte minimale (kg/an)</p>
-        </div>
-        <div class="stat-tile">
-          <p class="stat-tile-value" id="stat-max">–</p>
-          <p class="stat-tile-label">empreinte maximale (kg/an)</p>
-        </div>
-        <div class="stat-tile">
-          <p class="stat-tile-value" id="stat-avg">–</p>
-          <p class="stat-tile-label">moyenne de classe (kg/an)</p>
-        </div>
-      </div>
-      <p class="context-line" id="avg-context" style="margin-top:14px;"></p>
+    <div id="no-data-note" class="empty-state" hidden>
+      <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 16v10M24 32h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <p id="no-data-text">Aucune réponse comptabilisée pour l'instant.<br>Demande à tes élèves de calculer leur empreinte et de cliquer sur « Partager mon résultat » à la fin.</p>
     </div>
 
-    <div class="card gauge-card">
-      <h2 class="card-title">La classe, en moyenne</h2>
-      <svg id="gauge-svg" viewBox="0 0 200 118" class="gauge">
-        <path id="gauge-band-good" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
-        <path id="gauge-band-warn" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
-        <path id="gauge-band-crit" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
-        <g id="gauge-ref-marker"></g>
-        <line id="gauge-needle" x1="100" y1="100" x2="100" y2="30" class="gauge-needle"/>
-        <circle cx="100" cy="100" r="5" class="gauge-hub"/>
-      </svg>
-      <p class="gauge-ref-label">▲ Repère : empreinte numérique moyenne en France, environ 250 kg CO<sub>2</sub>e/an par personne</p>
+    <div id="stats-cards" hidden>
+      <div class="card">
+        <h2 class="card-title">Vue d'ensemble</h2>
+        <div class="stat-grid">
+          <div class="stat-tile">
+            <p class="stat-tile-value" id="stat-count">–</p>
+            <p class="stat-tile-label">réponses</p>
+          </div>
+          <div class="stat-tile">
+            <p class="stat-tile-value" id="stat-min">–</p>
+            <p class="stat-tile-label">empreinte minimale (kg/an)</p>
+          </div>
+          <div class="stat-tile">
+            <p class="stat-tile-value" id="stat-max">–</p>
+            <p class="stat-tile-label">empreinte maximale (kg/an)</p>
+          </div>
+          <div class="stat-tile">
+            <p class="stat-tile-value" id="stat-avg">–</p>
+            <p class="stat-tile-label">moyenne de classe (kg/an)</p>
+          </div>
+        </div>
+        <p class="context-line" id="avg-context" style="margin-top:14px;"></p>
+      </div>
+
+      <div class="card gauge-card">
+        <h2 class="card-title">La classe, en moyenne</h2>
+        <svg id="gauge-svg" viewBox="0 0 200 118" class="gauge">
+          <path id="gauge-band-good" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+          <path id="gauge-band-warn" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+          <path id="gauge-band-crit" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+          <g id="gauge-ref-marker"></g>
+          <line id="gauge-needle" x1="100" y1="100" x2="100" y2="30" class="gauge-needle"/>
+          <circle cx="100" cy="100" r="5" class="gauge-hub"/>
+        </svg>
+        <p class="gauge-ref-label">▲ Repère : empreinte numérique moyenne en France, environ 250 kg CO<sub>2</sub>e/an par personne</p>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Ce qui pèse le plus, en moyenne</h2>
+        <div id="dashboard-chart" class="breakdown-chart"></div>
+        <div class="dominant-callout">
+          <span class="swatch" id="dominant-swatch"></span>
+          <span id="dominant-text"></span>
+        </div>
+      </div>
     </div>
 
-    <div class="card">
-      <h2 class="card-title">Ce qui pèse le plus, en moyenne</h2>
-      <div id="dashboard-chart" class="breakdown-chart"></div>
-      <div class="dominant-callout">
-        <span class="swatch" id="dominant-swatch"></span>
-        <span id="dominant-text"></span>
-      </div>
+    <div class="card" id="manage-card" hidden>
+      <h2 class="card-title">Gérer les élèves de cette classe</h2>
+      <p class="card-hint">Décoche un·e élève pour exclure sa réponse du calcul des statistiques (utile pour un test ou une réponse manifestement erronée). Son entrée reste enregistrée, juste ignorée dans les chiffres ci-dessus.</p>
+      <div id="manage-list" class="manage-list"></div>
     </div>
 
     <button class="btn btn-ghost" id="reset-btn" type="button">↺ Réinitialiser les données de la classe</button>

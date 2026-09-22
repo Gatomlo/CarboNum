@@ -1,6 +1,8 @@
 // Base SQLite locale — un seul fichier, aucune donnée identifiante
-// (classe/élève sont des libellés libres fournis par l'enseignant·e
-// via l'URL, pas des données d'identité).
+// (classe/pseudo sont des libellés libres fournis par lien d'URL ou
+// saisis par l'élève lui-même, jamais son vrai nom). "included"
+// permet à l'enseignant·e d'exclure une réponse du calcul sans la
+// supprimer (voir la gestion de classe dans le tableau de bord).
 "use strict";
 
 const path = require("path");
@@ -20,17 +22,21 @@ db.exec(`
     ordinateur REAL NOT NULL,
     objets REAL NOT NULL,
     streaming REAL NOT NULL,
-    ia REAL NOT NULL
+    ia REAL NOT NULL,
+    included INTEGER NOT NULL DEFAULT 1
   )
 `);
 
-// Migration légère pour une base créée avant l'ajout de classe/eleve.
+// Migrations légères pour une base créée avant l'ajout de ces colonnes.
 const existingColumns = db.prepare("PRAGMA table_info(submissions)").all().map((c) => c.name);
 if (!existingColumns.includes("classe")) {
   db.exec("ALTER TABLE submissions ADD COLUMN classe TEXT NOT NULL DEFAULT ''");
 }
 if (!existingColumns.includes("eleve")) {
   db.exec("ALTER TABLE submissions ADD COLUMN eleve TEXT NOT NULL DEFAULT ''");
+}
+if (!existingColumns.includes("included")) {
+  db.exec("ALTER TABLE submissions ADD COLUMN included INTEGER NOT NULL DEFAULT 1");
 }
 
 // Un même élève (classe+eleve non vides) ne compte qu'une fois : une

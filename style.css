@@ -195,6 +195,30 @@ main { max-width: 720px; margin: 0 auto; }
   margin: 14px 0 0;
 }
 
+.identity-form {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin: 18px 0;
+  box-shadow: var(--shadow);
+}
+.identity-intro { font-size: .86rem; color: var(--ink-2); margin: 0 0 16px; }
+.identity-fields { display: flex; flex-direction: column; gap: 14px; }
+.identity-error { color: var(--crit); font-size: .84rem; margin: 14px 0 0; font-weight: 600; }
+
+.field input[type="text"] {
+  font-family: inherit;
+  font-size: .95rem;
+  font-weight: 500;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+.field input[type="text"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
 /* ---------------- buttons ---------------- */
 
 .btn {
@@ -446,6 +470,25 @@ input[type="range"]::-moz-range-thumb {
   font-size: .92rem;
 }
 .dominant-callout .swatch { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+
+.card-hint { font-size: .85rem; color: var(--ink-2); margin: -6px 0 16px; }
+
+.manage-list { display: flex; flex-direction: column; gap: 8px; }
+.manage-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: .88rem;
+  cursor: pointer;
+}
+.manage-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.manage-pseudo { flex: 1; font-weight: 600; }
+.manage-total { font-family: var(--font-mono); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.manage-row.is-excluded { opacity: .5; }
+.manage-row.is-excluded .manage-pseudo { text-decoration: line-through; }
 
 .empty-state { text-align: center; color: var(--ink-2); padding-block: 40px; }
 .empty-state svg { width: 40px; height: 40px; color: var(--muted); margin-bottom: 12px; }

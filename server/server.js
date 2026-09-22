@@ -82,36 +82,70 @@ app.post("/api/submit", (req, res) => {
   res.json({ ok: true });
 });
 
-// Liste des classes distinctes ayant au moins une réponse, pour peupler
-// le sélecteur du tableau de bord.
+// Liste des classes distinctes ayant au moins une réponse (incluse ou
+// non), pour peupler le sélecteur du tableau de bord — une classe dont
+// tous les élèves seraient exclus doit rester sélectionnable pour être
+// gérée. Le compte affiché ne porte que sur les réponses comptabilisées.
 app.get("/api/classes", (req, res) => {
   const classes = db
     .prepare(
-      `SELECT classe, COUNT(*) as count FROM submissions WHERE classe != '' GROUP BY classe ORDER BY classe COLLATE NOCASE`
+      `SELECT classe, SUM(included) as count FROM submissions WHERE classe != '' GROUP BY classe ORDER BY classe COLLATE NOCASE`
     )
     .all();
   res.json({ classes });
 });
 
 // ?classe=... limite aux réponses de cette classe ; sans paramètre,
-// renvoie les statistiques combinées de toutes les classes.
+// renvoie les statistiques combinées de toutes les classes. Dans les
+// deux cas, seules les réponses non exclues (included = 1) comptent.
 app.get("/api/stats", (req, res) => {
   const classe = sanitizeLabel(req.query.classe || "");
   const rows = classe
-    ? db.prepare("SELECT * FROM submissions WHERE classe = ?").all(classe)
-    : db.prepare("SELECT * FROM submissions").all();
+    ? db.prepare("SELECT * FROM submissions WHERE classe = ? AND included = 1").all(classe)
+    : db.prepare("SELECT * FROM submissions WHERE included = 1").all();
 
   const stats = computeStats(rows);
   if (!classe) {
     stats.classesCount = db
-      .prepare("SELECT COUNT(DISTINCT classe) as n FROM submissions WHERE classe != ''")
+      .prepare("SELECT COUNT(DISTINCT classe) as n FROM submissions WHERE classe != '' AND included = 1")
       .get().n;
   }
   res.json(stats);
 });
 
+// Liste nominative (pseudo) des réponses d'une classe, incluses ou non,
+// pour la gestion de classe du tableau de bord. classe est obligatoire.
+app.get("/api/submissions", (req, res) => {
+  const classe = sanitizeLabel(req.query.classe || "");
+  if (!classe) {
+    return res.status(400).json({ error: "paramètre classe requis" });
+  }
+  const rows = db
+    .prepare(
+      "SELECT id, eleve, total, included, created_at FROM submissions WHERE classe = ? ORDER BY total DESC"
+    )
+    .all(classe);
+  res.json({ submissions: rows });
+});
+
+// Inclut ou exclut une réponse précise du calcul des statistiques,
+// sans la supprimer.
+app.patch("/api/submissions/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const included = req.body ? req.body.included : undefined;
+  if (!Number.isInteger(id) || typeof included !== "boolean") {
+    return res.status(400).json({ error: "paramètres invalides" });
+  }
+  const result = db.prepare("UPDATE submissions SET included = ? WHERE id = ?").run(included ? 1 : 0, id);
+  if (result.changes === 0) {
+    return res.status(404).json({ error: "introuvable" });
+  }
+  res.json({ ok: true });
+});
+
 // ?classe=... ne réinitialise que cette classe ; sans paramètre,
 // réinitialise l'ensemble des données (toutes classes confondues).
+// Supprime aussi bien les réponses incluses qu'exclues.
 app.delete("/api/submissions", (req, res) => {
   const classe = sanitizeLabel(req.query.classe || "");
   if (classe) {

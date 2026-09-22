@@ -9,22 +9,60 @@
   const { REFERENCE_MOYENNE_FR, CATEGORIES, CATEGORY_META, fmt, renderGaugeInto } = window.EmpreinteShared;
 
   // -------------------------------------------------------------
-  // Contexte classe / élève, passé en paramètre d'URL
-  // (ex. index.html?classe=5B&eleve=12). Optionnel : sans ces
-  // paramètres, le calculateur fonctionne comme avant.
+  // Contexte classe / élève : résolu par paramètre d'URL
+  // (ex. index.html?classe=5B&eleve=12), sinon mémorisé dans
+  // sessionStorage après une saisie manuelle, sinon demandé via
+  // le petit formulaire de l'écran d'accueil.
   // -------------------------------------------------------------
 
   const urlParams = new URLSearchParams(window.location.search);
-  const CLASSE = (urlParams.get("classe") || "").trim().slice(0, 60);
-  const ELEVE = (urlParams.get("eleve") || urlParams.get("id") || "").trim().slice(0, 60);
+  let CLASSE = (urlParams.get("classe") || "").trim().slice(0, 60);
+  let ELEVE = (urlParams.get("eleve") || urlParams.get("id") || "").trim().slice(0, 60);
+
+  function readStoredIdentity() {
+    try {
+      return {
+        classe: sessionStorage.getItem("empreinte-classe") || "",
+        eleve: sessionStorage.getItem("empreinte-eleve") || "",
+      };
+    } catch (e) {
+      return { classe: "", eleve: "" };
+    }
+  }
+
+  function storeIdentity(classe, eleve) {
+    try {
+      sessionStorage.setItem("empreinte-classe", classe);
+      sessionStorage.setItem("empreinte-eleve", eleve);
+    } catch (e) {
+      /* stockage indisponible : pas bloquant */
+    }
+  }
+
+  if (!CLASSE && !ELEVE) {
+    const stored = readStoredIdentity();
+    CLASSE = stored.classe;
+    ELEVE = stored.eleve;
+  }
 
   const contextBadge = document.getElementById("context-badge");
-  if (CLASSE || ELEVE) {
+  const identityForm = document.getElementById("identity-form");
+  const identityClasseInput = document.getElementById("identity-classe");
+  const identityEleveInput = document.getElementById("identity-eleve");
+  const identityError = document.getElementById("identity-error");
+
+  function showBadge() {
     const parts = [];
     if (CLASSE) parts.push(`classe ${CLASSE}`);
-    if (ELEVE) parts.push(`identifiant ${ELEVE}`);
+    if (ELEVE) parts.push(`pseudo ${ELEVE}`);
     contextBadge.textContent = `Tu réponds pour : ${parts.join(" — ")}`;
     contextBadge.hidden = false;
+  }
+
+  if (CLASSE || ELEVE) {
+    showBadge();
+  } else {
+    identityForm.hidden = false;
   }
 
   // -------------------------------------------------------------
@@ -127,6 +165,22 @@
   });
 
   document.getElementById("start-btn").addEventListener("click", () => {
+    if (!identityForm.hidden) {
+      const classeVal = identityClasseInput.value.trim().slice(0, 60);
+      const eleveVal = identityEleveInput.value.trim().slice(0, 60);
+      if (!classeVal || !eleveVal) {
+        identityError.textContent = "Indique le code de ta classe et choisis un pseudo pour continuer.";
+        identityError.hidden = false;
+        return;
+      }
+      CLASSE = classeVal;
+      ELEVE = eleveVal;
+      storeIdentity(CLASSE, ELEVE);
+      identityForm.hidden = true;
+      identityError.hidden = true;
+      showBadge();
+    }
+
     currentStep = 0;
     renderStep();
     showScreen("wizard");

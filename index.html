@@ -31,6 +31,22 @@
       <p class="eyebrow">Outil pédagogique — 3 minutes</p>
       <h1>Quelle est l'empreinte carbone <em>de ton quotidien numérique&nbsp;?</em></h1>
       <p class="lead">Smartphone, tablette, ordinateur, objets connectés, streaming, intelligence artificielle : réponds à quelques questions sur tes usages et découvre ton empreinte carbone numérique annuelle — puis compare-la à des repères concrets.</p>
+
+      <div class="identity-form" id="identity-form" hidden>
+        <p class="identity-intro">Pour rejoindre ta classe, indique le code donné par ton enseignant·e et choisis un pseudo (pas ton vrai nom).</p>
+        <div class="identity-fields">
+          <label class="field">
+            <span>Code de la classe</span>
+            <input type="text" id="identity-classe" maxlength="60" placeholder="ex. 5B" autocomplete="off">
+          </label>
+          <label class="field">
+            <span>Ton pseudo</span>
+            <input type="text" id="identity-eleve" maxlength="60" placeholder="ex. Loutre-Bleue" autocomplete="off">
+          </label>
+        </div>
+        <p class="identity-error" id="identity-error" hidden></p>
+      </div>
+
       <p class="context-badge" id="context-badge" hidden></p>
 
       <div class="teaser-row" aria-hidden="true">

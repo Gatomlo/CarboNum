@@ -46,7 +46,7 @@ http://localhost:3000/?classe=5B&eleve=12
 - `classe` — nom ou code du groupe classe (ex. `5B`, `3eA`…)
 - `eleve` (ou `id`) — un identifiant au choix (numéro de rang, pseudo…), utilisé uniquement pour qu'une nouvelle réponse du même élève **remplace** la précédente au lieu de la dupliquer. Ce n'est pas un nom et il n'est affiché nulle part dans les statistiques.
 
-Ces deux paramètres sont optionnels : sans eux, l'application fonctionne comme avant (partage anonyme, sans classe). Chaque élève voit un petit badge en haut de page confirmant le contexte dans lequel il répond.
+**Sans ces paramètres dans l'URL**, l'élève arrive sur un petit formulaire qui l'invite à indiquer le code de sa classe et à choisir un pseudo (pas son vrai nom) avant de commencer — ces deux champs sont obligatoires pour continuer. L'information est ensuite mémorisée pour la session du navigateur (elle n'est pas redemandée si l'élève recharge la page) et un badge en haut de page confirme le contexte dans lequel il répond.
 
 Le tableau de bord (`dashboard.html`) propose un sélecteur pour :
 
@@ -54,6 +54,10 @@ Le tableau de bord (`dashboard.html`) propose un sélecteur pour :
 - ou afficher les **statistiques combinées de toutes les classes** ayant répondu (option par défaut « Toutes les classes »).
 
 Le bouton de réinitialisation n'efface que la classe actuellement affichée (ou tout, si « Toutes les classes » est sélectionné) — la confirmation précise toujours la portée avant suppression.
+
+#### Exclure un·e élève des statistiques
+
+Quand une classe précise est affichée dans le tableau de bord, une carte **« Gérer les élèves de cette classe »** liste chaque réponse par pseudo avec une case à cocher. Décocher un·e élève exclut sa réponse du calcul (compte, min/max/moyenne, répartition) sans la supprimer — utile pour une réponse test ou manifestement erronée. Elle peut être recochée à tout moment. Cette exclusion s'applique aussi à la vue combinée « Toutes les classes ».
 
 ## Fonctionnement
 
