@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon Empreinte Numérique</title>
+<meta name="description" content="Calculateur pédagogique de l'empreinte carbone du quotidien numérique des élèves : smartphone, tablette, ordinateur, objets connectés, streaming et IA.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M16 6 C 21 10, 21 22, 16 26 C 11 22, 11 10, 16 6 Z" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M6 16 H26" stroke="currentColor" stroke-width="2"/>
+    </svg>
+    <span>Empreinte Numérique</span>
+  </div>
+  <button id="theme-toggle" class="icon-btn" type="button" aria-label="Changer de thème" title="Changer de thème">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4V2M12 22v-2M4 12H2M22 12h-2M5 5 3.6 3.6M20.4 20.4 19 19M19 5l1.4-1.4M3.6 20.4 5 19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+  </button>
+</header>
+
+<main>
+
+  <!-- ================= HERO ================= -->
+  <section id="screen-hero" class="screen is-active">
+    <div class="hero">
+      <p class="eyebrow">Outil pédagogique — 3 minutes</p>
+      <h1>Quelle est l'empreinte carbone <em>de ton quotidien numérique&nbsp;?</em></h1>
+      <p class="lead">Smartphone, tablette, ordinateur, objets connectés, streaming, intelligence artificielle : réponds à quelques questions sur tes usages et découvre ton empreinte carbone numérique annuelle — puis compare-la à des repères concrets.</p>
+
+      <div class="teaser-row" aria-hidden="true">
+        <div class="teaser-card">
+          <svg viewBox="0 0 48 48"><path d="M6 26 L26 16 L42 8 L36 22 L26 26 L22 36 L18 30 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          <span>km en avion</span>
+        </div>
+        <div class="teaser-card">
+          <svg viewBox="0 0 48 48"><path d="M8 30 L11 20 Q13 16 18 16 H30 Q35 16 37 20 L40 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><rect x="6" y="30" width="36" height="6" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="14" cy="38" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="34" cy="38" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <span>km en voiture</span>
+        </div>
+        <div class="teaser-card">
+          <svg viewBox="0 0 48 48"><path d="M20 6 H28 V12 L32 18 V42 Q32 44 30 44 H18 Q16 44 16 42 V18 L20 12 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M16 26 H32" stroke="currentColor" stroke-width="2"/></svg>
+          <span>bouteilles plastique</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-lg" id="start-btn" type="button">Commencer le calcul →</button>
+      <p class="privacy-note">🔒 Rien n'est enregistré ni envoyé&nbsp;: tout le calcul se fait dans ton navigateur.</p>
+    </div>
+  </section>
+
+  <!-- ================= WIZARD ================= -->
+  <section id="screen-wizard" class="screen">
+    <div class="wizard">
+      <div class="progress-track" role="progressbar" aria-valuemin="1" aria-valuemax="6" aria-valuenow="1" id="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <p class="step-label" id="step-label">Étape 1 / 6</p>
+
+      <form id="wizard-form">
+
+        <!-- STEP 1 : SMARTPHONE -->
+        <fieldset class="step" data-step="1">
+          <legend class="step-title"><span class="step-icon" aria-hidden="true">📱</span> Smartphone</legend>
+
+          <label class="check-row">
+            <input type="checkbox" id="sp-none">
+            Je n'ai pas de smartphone
+          </label>
+
+          <div class="step-fields" id="sp-fields">
+            <label class="field">
+              <span>Gamme de l'appareil</span>
+              <select id="sp-gamme">
+                <option value="entree">Entrée de gamme</option>
+                <option value="milieu" selected>Milieu de gamme</option>
+                <option value="haut">Haut de gamme (dernier modèle)</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Durée de vie totale estimée de l'appareil : <output id="sp-life-out">3</output> ans</span>
+              <input type="range" id="sp-life" min="1" max="6" step="1" value="3">
+            </label>
+
+            <label class="field">
+              <span>Temps d'écran quotidien : <output id="sp-hours-out">4</output> h/jour</span>
+              <input type="range" id="sp-hours" min="0" max="12" step="0.5" value="4">
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- STEP 2 : TABLETTE -->
+        <fieldset class="step" data-step="2">
+          <legend class="step-title"><span class="step-icon" aria-hidden="true">📲</span> Tablette</legend>
+
+          <label class="check-row">
+            <input type="checkbox" id="tb-none">
+            Je n'ai pas de tablette
+          </label>
+
+          <div class="step-fields" id="tb-fields">
+            <label class="field">
+              <span>Durée de vie totale estimée de l'appareil : <output id="tb-life-out">4</output> ans</span>
+              <input type="range" id="tb-life" min="1" max="8" step="1" value="4">
+            </label>
+
+            <label class="field">
+              <span>Utilisation hebdomadaire : <output id="tb-hours-out">5</output> h/semaine</span>
+              <input type="range" id="tb-hours" min="0" max="40" step="1" value="5">
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- STEP 3 : ORDINATEUR -->
+        <fieldset class="step" data-step="3">
+          <legend class="step-title"><span class="step-icon" aria-hidden="true">💻</span> Ordinateur</legend>
+
+          <label class="check-row">
+            <input type="checkbox" id="pc-none">
+            Je n'ai pas d'ordinateur
+          </label>
+
+          <div class="step-fields" id="pc-fields">
+            <label class="field">
+              <span>Type d'ordinateur</span>
+              <select id="pc-type">
+                <option value="portable" selected>Portable</option>
+                <option value="fixe">Fixe (tour + écran)</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Durée de vie totale estimée de l'appareil : <output id="pc-life-out">5</output> ans</span>
+              <input type="range" id="pc-life" min="1" max="10" step="1" value="5">
+            </label>
+
+            <label class="field">
+              <span>Utilisation quotidienne : <output id="pc-hours-out">3</output> h/jour</span>
+              <input type="range" id="pc-hours" min="0" max="14" step="0.5" value="3">
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- STEP 4 : OBJETS CONNECTÉS -->
+        <fieldset class="step" data-step="4">
+          <legend class="step-title"><span class="step-icon" aria-hidden="true">⌚</span> Objets connectés</legend>
+          <p class="step-hint">Montre connectée, enceinte, casque Bluetooth, console portable, TV connectée…</p>
+
+          <div class="step-fields">
+            <label class="field">
+              <span>Nombre d'objets connectés possédés : <output id="obj-count-out">1</output></span>
+              <input type="range" id="obj-count" min="0" max="10" step="1" value="1">
+            </label>
+
+            <label class="field">
+              <span>Durée de vie moyenne de ces objets : <output id="obj-life-out">4</output> ans</span>
+              <input type="range" id="obj-life" min="1" max="8" step="1" value="4">
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- STEP 5 : STREAMING -->
+        <fieldset class="step" data-step="5">
+          <legend class="step-title"><span class="step-icon" aria-hidden="true">🎬</span> Streaming vidéo</legend>
+
+          <div class="step-fields">
+            <label class="field">
+              <span>Temps de streaming (vidéo, séries, réseaux sociaux) : <output id="st-hours-out">7</output> h/semaine</span>
+              <input type="range" id="st-hours" min="0" max="40" step="1" value="7">
+            </label>
+
+            <fieldset class="field radio-field">
+              <legend>Qualité de visionnage habituelle</legend>
+              <label class="radio-row"><input type="radio" name="st-quality" value="sd"> SD (définition standard)</label>
+              <label class="radio-row"><input type="radio" name="st-quality" value="hd" checked> HD</label>
+              <label class="radio-row"><input type="radio" name="st-quality" value="uhd"> 4K / Ultra HD</label>
+            </fieldset>
+          </div>
+        </fieldset>
+
+        <!-- STEP 6 : IA -->
+        <fieldset class="step" data-step="6">
+          <legend class="step-title"><span class="step-icon" aria-hidden="true">✨</span> Intelligence artificielle générative</legend>
+
+          <div class="step-fields">
+            <label class="field">
+              <span>Requêtes texte (chatbot IA) : <output id="ia-text-out">5</output> / jour</span>
+              <input type="range" id="ia-text" min="0" max="50" step="1" value="5">
+            </label>
+
+            <label class="field">
+              <span>Images générées par IA : <output id="ia-img-out">1</output> / semaine</span>
+              <input type="range" id="ia-img" min="0" max="30" step="1" value="1">
+            </label>
+          </div>
+        </fieldset>
+
+      </form>
+
+      <div class="wizard-nav">
+        <button class="btn btn-ghost" id="prev-btn" type="button">← Précédent</button>
+        <button class="btn btn-primary" id="next-btn" type="button">Suivant →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RESULTS ================= -->
+  <section id="screen-results" class="screen">
+    <div class="results">
+
+      <div class="result-hero">
+        <p class="eyebrow">Ton empreinte carbone numérique</p>
+        <p class="big-number"><span id="result-total">0</span><span class="unit">kg CO<sub>2</sub>e / an</span></p>
+        <p class="context-line" id="result-context"></p>
+      </div>
+
+      <div class="card gauge-card">
+        <h2 class="card-title">Où te situes-tu&nbsp;?</h2>
+        <svg id="gauge-svg" viewBox="0 0 200 118" class="gauge">
+          <path id="gauge-band-good" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+          <path id="gauge-band-warn" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+          <path id="gauge-band-crit" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+          <g id="gauge-ref-marker"></g>
+          <line id="gauge-needle" x1="100" y1="100" x2="100" y2="30" class="gauge-needle"/>
+          <circle cx="100" cy="100" r="5" class="gauge-hub"/>
+        </svg>
+        <div class="gauge-legend">
+          <span class="legend-dot" style="--dot:var(--good)"></span> Empreinte plus faible
+          <span class="legend-dot" style="--dot:var(--crit)"></span> Empreinte plus élevée
+        </div>
+        <p class="gauge-ref-label">▲ Repère : empreinte numérique moyenne en France, environ 250 kg CO<sub>2</sub>e/an par personne</p>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Répartition par usage</h2>
+        <div id="breakdown-chart" class="breakdown-chart"></div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Ça représente quoi&nbsp;?</h2>
+        <div class="equiv-grid">
+          <div class="equiv-card">
+            <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 26 L26 16 L42 8 L36 22 L26 26 L22 36 L18 30 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            <p class="equiv-value" id="eq-avion-km">0 km</p>
+            <p class="equiv-label">en avion</p>
+            <p class="equiv-sub" id="eq-avion-sub"></p>
+          </div>
+          <div class="equiv-card">
+            <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 30 L11 20 Q13 16 18 16 H30 Q35 16 37 20 L40 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><rect x="6" y="30" width="36" height="6" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="14" cy="38" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="34" cy="38" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            <p class="equiv-value" id="eq-voiture-km">0 km</p>
+            <p class="equiv-label">en voiture</p>
+            <p class="equiv-sub" id="eq-voiture-sub"></p>
+          </div>
+          <div class="equiv-card">
+            <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M20 6 H28 V12 L32 18 V42 Q32 44 30 44 H18 Q16 44 16 42 V18 L20 12 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M16 26 H32" stroke="currentColor" stroke-width="2"/></svg>
+            <p class="equiv-value" id="eq-bouteilles">0</p>
+            <p class="equiv-label">bouteilles plastique (0,5 L)</p>
+            <p class="equiv-sub" id="eq-bouteilles-sub"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card tips-card">
+        <h2 class="card-title">Comment réduire ton empreinte&nbsp;?</h2>
+        <p class="tip-main" id="tip-main"></p>
+        <ul class="tip-list" id="tip-list"></ul>
+      </div>
+
+      <details class="methodology">
+        <summary>Méthodologie &amp; sources</summary>
+        <div class="methodology-body">
+          <p>Les coefficients utilisés sont des <strong>ordres de grandeur pédagogiques</strong>, construits à partir de données publiques (ADEME — Base Carbone et étude « Évaluation environnementale des impacts du numérique en France », 2022&nbsp;; Arcep&nbsp;; GreenIT.fr&nbsp;; The Shift Project). Ils ne remplacent pas un bilan carbone individuel précis, mais permettent de comparer les ordres de grandeur entre usages.</p>
+          <ul>
+            <li><strong>Fabrication des appareils</strong> : empreinte forfaitaire (ex. ~65 kg CO<sub>2</sub>e pour un smartphone milieu de gamme, ~200 kg pour un ordinateur portable), répartie sur la durée de vie déclarée.</li>
+            <li><strong>Usage</strong> : électricité de charge + part de réseau et de centres de données, estimée par heure d'utilisation quotidienne.</li>
+            <li><strong>Streaming</strong> : environ 30 g CO<sub>2</sub>e/h en SD, 70 g/h en HD, 200 g/h en 4K.</li>
+            <li><strong>IA générative</strong> : environ 3 g CO<sub>2</sub>e par requête texte, 20 g par image générée.</li>
+            <li><strong>Équivalences</strong> : avion ≈ 230 g CO<sub>2</sub>e/km-passager (moyen-courrier), voiture ≈ 193 g CO<sub>2</sub>e/km (moyenne du parc), bouteille plastique 0,5 L ≈ 83 g CO<sub>2</sub>e (fabrication).</li>
+          </ul>
+          <p>Aucune donnée saisie n'est enregistrée ni transmise&nbsp;: le calcul s'exécute entièrement dans le navigateur.</p>
+        </div>
+      </details>
+
+      <button class="btn btn-ghost" id="restart-btn" type="button">↺ Recommencer</button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>Outil pédagogique — usages du numérique à des fins de sensibilisation en classe. Chiffres à ordre de grandeur, non contractuels.</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
