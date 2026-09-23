@@ -12,7 +12,7 @@
 (function () {
   "use strict";
 
-  const { REFERENCE_MOYENNE_BE, fmt, renderGaugeInto, renderBreakdownInto, renderEquivalencesInto } = window.EmpreinteShared;
+  const { REFERENCE_MOYENNE_BE, fmt, renderGaugeInto, renderBreakdownInto, renderEquivalencesInto, renderQrInto } = window.EmpreinteShared;
 
   const REFRESH_MS = 10000;
 
@@ -163,6 +163,86 @@
     refresh();
     refreshTimer = setInterval(refresh, REFRESH_MS);
   }
+
+  // ---- Surimpression QR code : rejoindre une classe sans interrompre
+  // l'affichage projeté. La liste des classes n'est chargée qu'à la
+  // première ouverture (pas besoin de la tenir à jour en continu comme
+  // les statistiques) ; un nouveau classement se voit au réouverture.
+
+  const qrToggleBtn = document.getElementById("qr-toggle-btn");
+  const qrCloseBtn = document.getElementById("qr-close-btn");
+  const qrOverlay = document.getElementById("qr-overlay");
+  const qrClassSelect = document.getElementById("qr-class-select");
+  const qrCode = document.getElementById("qr-overlay-code");
+  const qrUrl = document.getElementById("qr-overlay-url");
+  const qrHint = document.getElementById("qr-overlay-hint");
+
+  let qrClassesLoaded = false;
+
+  function renderQrFor(classe) {
+    if (!classe) {
+      qrCode.hidden = true;
+      qrUrl.textContent = "";
+      qrHint.hidden = false;
+      return;
+    }
+    qrHint.hidden = true;
+    const url = new URL("index.html", window.location.href);
+    url.searchParams.set("classe", classe);
+    renderQrInto(qrCode, url.toString());
+    qrUrl.textContent = url.toString();
+  }
+
+  async function loadQrClasses() {
+    if (qrClassesLoaded) return;
+    try {
+      const res = await fetch("api/classes");
+      if (!res.ok) return;
+      const classes = (await res.json()).classes || [];
+      qrClassSelect.innerHTML = "";
+      const emptyOpt = document.createElement("option");
+      emptyOpt.value = "";
+      emptyOpt.textContent = "— Choisir une classe —";
+      qrClassSelect.appendChild(emptyOpt);
+      classes.forEach((c) => {
+        const opt = document.createElement("option");
+        opt.value = c.classe;
+        opt.textContent = c.classe;
+        qrClassSelect.appendChild(opt);
+      });
+      // Pré-sélectionne la classe déjà affichée en projection, si une
+      // seule classe précise est projetée (pas "toutes les classes" ni
+      // une sélection combinée, ambiguë quant à laquelle choisir).
+      if (classesList.length === 1 && classes.some((c) => c.classe === classesList[0])) {
+        qrClassSelect.value = classesList[0];
+        renderQrFor(classesList[0]);
+      }
+      qrClassesLoaded = true;
+    } catch (e) {
+      /* liste indisponible : le menu reste vide, pas bloquant */
+    }
+  }
+
+  function openQrOverlay() {
+    qrOverlay.hidden = false;
+    loadQrClasses();
+  }
+
+  function closeQrOverlay() {
+    qrOverlay.hidden = true;
+  }
+
+  qrToggleBtn.addEventListener("click", openQrOverlay);
+  qrCloseBtn.addEventListener("click", closeQrOverlay);
+  qrOverlay.addEventListener("click", (e) => {
+    if (e.target === qrOverlay) closeQrOverlay(); // clic sur le fond, pas sur la carte
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !qrOverlay.hidden) closeQrOverlay();
+  });
+  qrClassSelect.addEventListener("change", () => {
+    renderQrFor(qrClassSelect.value);
+  });
 
   (async function bootstrap() {
     if (await checkAuth()) {

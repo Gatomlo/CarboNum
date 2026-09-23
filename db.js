@@ -79,6 +79,7 @@ function deleteByClasse(classe) {
 
 function deleteAll() {
   state.submissions = [];
+  state.classSettings = {};
   save();
 }
 
@@ -106,6 +107,33 @@ function ensureClassSettings(classe) {
     state.classSettings[classe] = { policy: "multiple", unlockedAll: false, unlockedStudents: [] };
   }
   return state.classSettings[classe];
+}
+
+// Liste de tous les noms de classe connus : ceux qui ont au moins une
+// réponse, mais aussi ceux créés à l'avance par l'enseignant·e (voir
+// createClass) et qui n'ont encore reçu aucune réponse.
+function getKnownClasses() {
+  const set = new Set();
+  for (const r of state.submissions) {
+    if (r.classe) set.add(r.classe);
+  }
+  if (state.classSettings) {
+    for (const classe of Object.keys(state.classSettings)) set.add(classe);
+  }
+  return Array.from(set);
+}
+
+// Crée une classe vide (sans élève) pour permettre à l'enseignant·e de
+// configurer sa politique de réponse avant que quiconque y réponde.
+// Idempotent : ne fait rien si la classe existe déjà (voir classExists
+// pour distinguer une vraie création d'un simple no-op côté serveur).
+function classExists(classe) {
+  return getKnownClasses().includes(classe);
+}
+
+function createClass(classe) {
+  ensureClassSettings(classe);
+  save();
 }
 
 function setClassPolicy(classe, policy) {
@@ -168,4 +196,7 @@ module.exports = {
   setClassUnlockedAll,
   setStudentUnlocked,
   consumeStudentUnlock,
+  getKnownClasses,
+  classExists,
+  createClass,
 };

@@ -23,7 +23,7 @@
 (function () {
   "use strict";
 
-  const { REFERENCE_MOYENNE_BE, fmt, renderGaugeInto, renderBreakdownInto, renderEquivalencesInto } = window.EmpreinteShared;
+  const { REFERENCE_MOYENNE_BE, fmt, renderGaugeInto, renderBreakdownInto, renderEquivalencesInto, renderQrInto } = window.EmpreinteShared;
 
   const loadingEl = document.getElementById("loading-state");
   const errorEl = document.getElementById("error-state");
@@ -258,34 +258,42 @@
 
 
   // ---- Générateur de lien de classe ----
+  // Le menu déroulant liste les classes connues (voir populateClasses) —
+  // plus de champ texte libre, pour éviter de générer un lien vers une
+  // classe mal orthographiée ou inexistante. Pour une classe qui n'a
+  // encore aucune réponse, elle doit d'abord être créée dans l'onglet
+  // « Classe » (voir plus bas) pour apparaître ici.
 
   const linkGenForm = document.getElementById("link-gen-form");
-  const linkGenClasseInput = document.getElementById("link-gen-classe");
+  const linkGenClasseSelect = document.getElementById("link-gen-classe");
+  const linkGenNoClasses = document.getElementById("link-gen-no-classes");
   const linkGenOutput = document.getElementById("link-gen-output");
   const linkGenUrlInput = document.getElementById("link-gen-url");
   const linkGenCopyBtn = document.getElementById("link-gen-copy");
   const linkGenCopiedMsg = document.getElementById("link-gen-copied");
   const linkGenQr = document.getElementById("link-gen-qr");
 
-  // Rendu du QR code en SVG, entièrement côté client (bibliothèque
-  // vendorisée, voir qrcode-lib.js). Toujours en noir sur blanc, quel
-  // que soit le thème du site : un QR code themé (contraste réduit en
-  // thème sombre) risquerait de ne plus être lisible par un scanner.
-  function renderLinkQr(url) {
-    if (typeof qrcode !== "function") {
-      linkGenQr.hidden = true;
-      return;
-    }
-    const qr = qrcode(0, "M");
-    qr.addData(url);
-    qr.make();
-    linkGenQr.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 8, scalable: true });
-    linkGenQr.hidden = false;
+  function populateLinkGenSelect() {
+    const previous = linkGenClasseSelect.value;
+    linkGenClasseSelect.innerHTML = "";
+    const emptyOpt = document.createElement("option");
+    emptyOpt.value = "";
+    emptyOpt.textContent = "— Choisir une classe —";
+    linkGenClasseSelect.appendChild(emptyOpt);
+    knownClasses.forEach((c) => {
+      const opt = document.createElement("option");
+      opt.value = c.classe;
+      opt.textContent = c.classe;
+      linkGenClasseSelect.appendChild(opt);
+    });
+    linkGenClasseSelect.value = knownClasses.some((c) => c.classe === previous) ? previous : "";
+    linkGenForm.hidden = knownClasses.length === 0;
+    linkGenNoClasses.hidden = knownClasses.length > 0;
   }
 
   linkGenForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const classe = linkGenClasseInput.value.trim();
+    const classe = linkGenClasseSelect.value;
     linkGenCopiedMsg.hidden = true;
     if (!classe) {
       linkGenOutput.hidden = true;
@@ -299,7 +307,7 @@
     linkGenUrlInput.value = url.toString();
     linkGenOutput.hidden = false;
     linkGenUrlInput.select();
-    renderLinkQr(url.toString());
+    renderQrInto(linkGenQr, url.toString());
   });
 
   linkGenCopyBtn.addEventListener("click", async () => {
@@ -390,6 +398,7 @@
 
     renderStatsClassList(preselectStatsList);
     renderDeleteClassesList();
+    populateLinkGenSelect();
   }
 
   // ---- Sélection des classes affichées dans l'onglet Statistiques ----
@@ -800,6 +809,52 @@
 
   manageClassSelect.addEventListener("change", () => {
     loadManageClassData(manageClassSelect.value);
+  });
+
+  // ---- Créer une classe à l'avance (sans attendre de réponse d'élève),
+  // pour pouvoir régler sa politique de réponse avant que les élèves ne
+  // s'y connectent ----
+
+  const createClassForm = document.getElementById("create-class-form");
+  const createClassInput = document.getElementById("create-class-input");
+  const createClassError = document.getElementById("create-class-error");
+  const createClassSuccess = document.getElementById("create-class-success");
+
+  createClassForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    createClassError.hidden = true;
+    createClassSuccess.hidden = true;
+    const classe = createClassInput.value.trim();
+    if (!classe) return;
+
+    const submitBtn = createClassForm.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+    try {
+      const res = await fetch("api/classes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ classe }),
+      });
+      if (redirectToLoginIfUnauthorized(res)) return;
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        createClassError.textContent = data.error || "Impossible de créer cette classe.";
+        createClassError.hidden = false;
+        return;
+      }
+      createClassInput.value = "";
+      createClassSuccess.hidden = false;
+      // Préselectionne la classe créée dans le sélecteur de gestion, pour
+      // enchaîner directement sur le réglage de sa politique de réponse.
+      await populateClasses(data.classe, null);
+      loadManageClassData(manageClassSelect.value);
+      loadStats(); // rafraîchit la liste à cocher de l'onglet Statistiques
+    } catch (e2) {
+      createClassError.textContent = "Impossible de contacter le serveur.";
+      createClassError.hidden = false;
+    } finally {
+      submitBtn.disabled = false;
+    }
   });
 
   // ---- Supprimer les données d'une classe (classe par classe, plutôt

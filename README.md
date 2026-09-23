@@ -83,17 +83,23 @@ Dans l'onglet Statistiques du tableau de bord (`dashboard.html`), la liste à co
 
 Une classe apparue une fois dans cette liste n'en disparaît **jamais** d'elle-même (même si tous ses élèves sont exclus, voir ci-dessous, ou en cas de coupure réseau passagère) — seule une suppression explicite de cette classe (onglet « Classe », bouton « Supprimer » propre à chaque classe) la retire définitivement, elle et ses élèves.
 
+#### Créer une classe à l'avance
+
+Dans l'onglet **« Classe »** du tableau de bord, la carte **« Créer une classe »** permet de créer une classe vide (sans attendre qu'un·e élève y réponde), pour régler sa politique de réponse — voire d'autres réglages futurs — avant que quiconque s'y connecte. Une classe créée ainsi apparaît immédiatement dans tous les sélecteurs (Statistiques, Classe, Partager), avec 0 réponse tant que personne n'y a répondu.
+
 #### Exclure un·e élève des statistiques
 
 Dans l'onglet **« Classe »** du tableau de bord, une fois une classe choisie dans son sélecteur, une carte **« Gérer les élèves de cette classe »** liste chaque réponse par pseudo avec une case à cocher. Décocher un·e élève exclut sa réponse du calcul (compte, min/max/moyenne, répartition) sans la supprimer — utile pour une réponse test ou manifestement erronée. Elle peut être recochée à tout moment. Cette exclusion s'applique aussi dans l'onglet Statistiques, quelle que soit la sélection.
 
 #### Créer un lien pour une classe
 
-En haut du tableau de bord, une carte **« Créer un lien pour une classe »** permet de saisir un code de classe et de générer directement le lien `?classe=...` prêt à copier (et à donner aux élèves), sans avoir à le construire à la main — accompagné d'un **QR code** (généré côté client, jamais transmis à un service externe) à projeter ou partager pour que les élèves accèdent au quiz en le scannant depuis leur téléphone. Fonctionne aussi pour une classe qui n'a encore aucune réponse.
+Dans l'onglet **« Partager »**, la carte **« Créer un lien pour une classe »** propose un menu déroulant des classes connues (créées à l'avance ou ayant déjà reçu une réponse — jamais de code à taper à la main, pour éviter une faute de frappe qui pointerait vers une classe inexistante) pour générer directement le lien `?classe=...` prêt à copier, accompagné d'un **QR code** (généré côté client, jamais transmis à un service externe) à projeter ou partager pour que les élèves accèdent au quiz en le scannant depuis leur téléphone.
 
 #### Mode projection
 
 Le bouton **« Mode projection »** (dans l'onglet Statistiques) ouvre `projection.html` dans un nouvel onglet : une vue simplifiée, en gros caractères, sans aucun contrôle d'administration, qui reprend la sélection de classes actuellement affichée — nombre de réponses, jauge, répartition par usage et équivalences concrètes (avion, voiture, bouteilles, forêt rasée), comme dans l'onglet Statistiques — et **s'actualise automatiquement** (toutes les 10 secondes) pendant que les élèves répondent — pratique à projeter au tableau en classe. Protégée par le même mot de passe que le reste du tableau de bord ; si le navigateur a déjà une session active, elle s'ouvre directement sans redemander la connexion.
+
+Le bouton **« QR code »**, en haut de cette vue, affiche en surimpression (sans interrompre l'actualisation des statistiques derrière) un QR code pour une classe choisie dans un menu déroulant — pratique pour que les élèves rejoignent la classe en le scannant directement depuis l'écran projeté, sans devoir taper le lien. Si la projection affiche déjà une classe précise (et une seule), elle est présélectionnée automatiquement.
 
 #### Exporter les données en CSV
 

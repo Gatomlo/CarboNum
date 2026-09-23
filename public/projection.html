@@ -30,6 +30,7 @@
     <header class="proj-header">
       <span class="proj-title" id="proj-title">Toutes les classes</span>
       <span class="proj-updated" id="proj-updated"></span>
+      <button class="btn btn-primary proj-qr-toggle" id="qr-toggle-btn" type="button">🔗 QR code</button>
     </header>
 
     <div id="proj-loading" class="empty-state">
@@ -115,9 +116,25 @@
     </div>
   </div>
 
+  <div id="qr-overlay" class="qr-overlay" hidden>
+    <div class="qr-overlay-card">
+      <button class="icon-btn qr-overlay-close" id="qr-close-btn" type="button" aria-label="Fermer">✕</button>
+      <label class="field">
+        <span>Classe</span>
+        <select id="qr-class-select">
+          <option value="">— Choisir une classe —</option>
+        </select>
+      </label>
+      <div class="qr-overlay-code" id="qr-overlay-code"></div>
+      <p class="qr-overlay-url" id="qr-overlay-url"></p>
+      <p class="qr-overlay-hint" id="qr-overlay-hint">Choisis une classe pour afficher son QR code.</p>
+    </div>
+  </div>
+
 </main>
 
 <script src="shared.js"></script>
+<script src="qrcode-lib.js"></script>
 <script src="projection.js"></script>
 </body>
 </html>

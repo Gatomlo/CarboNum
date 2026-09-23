@@ -192,6 +192,20 @@
     </div>
 
     <div class="tab-panel" id="tab-panel-manage" role="tabpanel" aria-labelledby="tab-btn-manage" hidden>
+      <div class="card no-print" id="create-class-card">
+        <h2 class="card-title">Créer une classe</h2>
+        <p class="card-hint">Crée une classe à l'avance pour régler sa politique de réponse avant que les élèves s'y connectent.</p>
+        <form class="link-gen-row" id="create-class-form">
+          <label class="field">
+            <span>Code de la classe</span>
+            <input type="text" id="create-class-input" maxlength="60" placeholder="ex. 5B" autocomplete="off" required>
+          </label>
+          <button class="btn btn-primary btn-sm" type="submit">Créer</button>
+        </form>
+        <p class="identity-error" id="create-class-error" hidden></p>
+        <p class="link-gen-copied" id="create-class-success" hidden>✓ Classe créée.</p>
+      </div>
+
       <div class="card no-print" id="manage-class-picker-card">
         <label class="field class-select-field">
           <span>Classe à gérer</span>
@@ -239,14 +253,17 @@
     <div class="tab-panel" id="tab-panel-share" role="tabpanel" aria-labelledby="tab-btn-share" hidden>
       <div class="card link-gen-card" id="link-gen-card">
         <h2 class="card-title">Créer un lien pour une classe</h2>
-        <p class="card-hint">Indique un code de classe pour générer le lien à donner à tes élèves.</p>
+        <p class="card-hint">Choisis une classe pour générer le lien à donner à tes élèves.</p>
         <form class="link-gen-row" id="link-gen-form">
           <label class="field">
-            <span>Code de la classe</span>
-            <input type="text" id="link-gen-classe" maxlength="60" placeholder="ex. 5B" autocomplete="off" required>
+            <span>Classe</span>
+            <select id="link-gen-classe" required>
+              <option value="">— Choisir une classe —</option>
+            </select>
           </label>
           <button class="btn btn-primary btn-sm" type="submit">Générer</button>
         </form>
+        <p class="card-hint" id="link-gen-no-classes" hidden>Aucune classe pour l'instant — crée-en une dans l'onglet <strong>Classe</strong>, ou attends la première réponse d'un·e élève.</p>
         <div class="link-gen-output" id="link-gen-output" hidden>
           <input type="text" id="link-gen-url" readonly aria-label="Lien à partager">
           <button class="btn btn-ghost btn-sm" id="link-gen-copy" type="button">Copier</button>

@@ -718,6 +718,37 @@ input[type="range"]::-moz-range-thumb {
 }
 .proj-title { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.3rem, 3vw, 1.8rem); }
 .proj-updated { color: var(--muted); font-size: .82rem; font-family: var(--font-mono); }
+.proj-qr-toggle { flex: none; }
+
+/* Surimpression QR code (mode projection) : un grand QR code au-dessus
+   des statistiques projetées, pour que les élèves rejoignent la classe
+   choisie sans interrompre l'affichage en cours. */
+.qr-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 50;
+}
+.qr-overlay-card {
+  position: relative;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 32px 40px 28px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+}
+.qr-overlay-close { position: absolute; top: 10px; right: 10px; }
+.qr-overlay-card .field { text-align: left; margin-bottom: 18px; }
+.qr-overlay-code { min-height: 240px; display: flex; align-items: center; justify-content: center; }
+.qr-overlay-code svg { width: 260px; height: 260px; display: block; }
+.qr-overlay-url { font-family: var(--font-mono); font-size: .85rem; color: var(--ink-2); margin: 14px 0 0; word-break: break-all; }
+.qr-overlay-hint { color: var(--muted); font-size: .9rem; }
 
 .proj-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
 .proj-stat-tile {

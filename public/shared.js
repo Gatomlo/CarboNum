@@ -201,6 +201,28 @@
     els.foretSub.textContent = eq.foretTrips >= 0.1 ? `≈ ${fmt(eq.foretTrips, 1)} fois un tapis de salon (4 m²)` : "";
   }
 
+  // ---- QR code (rendu SVG côté client) ----
+  // Utilisé par le tableau de bord (générateur de lien) et le mode
+  // projection (surimpression). Nécessite que qrcode-lib.js (bibliothèque
+  // vendorisée) soit déjà chargé sur la page — jamais transmis à un
+  // service externe. Toujours en noir sur blanc, quel que soit le thème
+  // de la page : un QR code themé (contraste réduit en thème sombre)
+  // risquerait de ne plus être lisible par un scanner.
+  function renderQrInto(container, url, options) {
+    if (typeof global.qrcode !== "function") {
+      container.hidden = true;
+      return false;
+    }
+    const qr = global.qrcode(0, "M");
+    qr.addData(url);
+    qr.make();
+    const cellSize = (options && options.cellSize) || 4;
+    const margin = (options && options.margin) || 8;
+    container.innerHTML = qr.createSvgTag({ cellSize, margin, scalable: true });
+    container.hidden = false;
+    return true;
+  }
+
   global.EmpreinteShared = {
     REFERENCE_MOYENNE_BE,
     REFERENCE_BREAKDOWN,
@@ -214,5 +236,6 @@
     renderBreakdownInto,
     computeEquivalences,
     renderEquivalencesInto,
+    renderQrInto,
   };
 })(window);

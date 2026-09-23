@@ -307,20 +307,37 @@ app.get("/api/submission-status", (req, res) => {
 // /api/submit reste public : c'est la seule route que les élèves
 // utilisent, et elle n'expose aucune donnée en retour.
 
-// Liste des classes distinctes ayant au moins une réponse (incluse ou
-// non), pour peupler le sélecteur du tableau de bord — une classe dont
-// tous les élèves seraient exclus doit rester sélectionnable pour être
-// gérée. Le compte affiché ne porte que sur les réponses comptabilisées.
+// Liste des classes connues (ayant au moins une réponse incluse ou non,
+// ou créées à l'avance par l'enseignant·e — voir POST ci-dessous), pour
+// peupler les sélecteurs du tableau de bord. Une classe dont tous les
+// élèves seraient exclus, ou qui n'a encore reçu aucune réponse, reste
+// listée. Le compte affiché ne porte que sur les réponses comptabilisées.
 app.get("/api/classes", requireAdmin, (req, res) => {
   const countByClasse = {};
   for (const r of db.getAll()) {
     if (!r.classe) continue;
     countByClasse[r.classe] = (countByClasse[r.classe] || 0) + (r.included ? 1 : 0);
   }
-  const classes = Object.keys(countByClasse)
+  const classes = db
+    .getKnownClasses()
     .sort((a, b) => a.localeCompare(b, "fr", { sensitivity: "base" }))
-    .map((classe) => ({ classe, count: countByClasse[classe] }));
+    .map((classe) => ({ classe, count: countByClasse[classe] || 0 }));
   res.json({ classes });
+});
+
+// Crée une classe vide, sans attendre de réponse d'élève, pour que
+// l'enseignant·e puisse en régler la politique de réponse (unique ou
+// multiple) avant que qui que ce soit s'y connecte.
+app.post("/api/classes", requireAdmin, (req, res) => {
+  const classe = sanitizeLabel(req.body && req.body.classe);
+  if (!classe) {
+    return res.status(400).json({ error: "nom de classe requis" });
+  }
+  if (db.classExists(classe)) {
+    return res.status(409).json({ error: "Cette classe existe déjà." });
+  }
+  db.createClass(classe);
+  res.json({ ok: true, classe });
 });
 
 // Politique de réponse d'une classe ("multiple", par défaut — une
