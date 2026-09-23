@@ -688,7 +688,7 @@ input[type="range"]::-moz-range-thumb {
 .proj-stat-value { font-family: var(--font-mono); font-weight: 700; font-size: clamp(1.8rem, 5vw, 2.6rem); margin: 0; color: var(--accent); font-variant-numeric: tabular-nums; }
 .proj-stat-label { font-size: .95rem; color: var(--ink-2); margin: 6px 0 0; }
 
-.proj-panels { display: grid; grid-template-columns: 1fr 1.3fr; gap: 18px; align-items: start; }
+.proj-panels { display: grid; grid-template-columns: 1fr 1.3fr; gap: 18px; align-items: start; margin-bottom: 18px; }
 .proj-gauge-card { text-align: center; }
 .proj-gauge { max-width: 380px; }
 

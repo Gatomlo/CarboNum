@@ -12,7 +12,7 @@
 (function () {
   "use strict";
 
-  const { REFERENCE_MOYENNE_BE, fmt, renderGaugeInto, renderBreakdownInto } = window.EmpreinteShared;
+  const { REFERENCE_MOYENNE_BE, fmt, renderGaugeInto, renderBreakdownInto, renderEquivalencesInto } = window.EmpreinteShared;
 
   const REFRESH_MS = 10000;
 
@@ -132,6 +132,20 @@
     );
 
     renderBreakdownInto(document.getElementById("proj-chart"), stats.avgByCategory);
+
+    renderEquivalencesInto(
+      {
+        avionKm: document.getElementById("proj-eq-avion-km"),
+        avionSub: document.getElementById("proj-eq-avion-sub"),
+        voitureKm: document.getElementById("proj-eq-voiture-km"),
+        voitureSub: document.getElementById("proj-eq-voiture-sub"),
+        bouteilles: document.getElementById("proj-eq-bouteilles"),
+        bouteillesSub: document.getElementById("proj-eq-bouteilles-sub"),
+        foret: document.getElementById("proj-eq-foret"),
+        foretSub: document.getElementById("proj-eq-foret-sub"),
+      },
+      stats.avg
+    );
   }
 
   let refreshTimer = null;

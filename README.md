@@ -85,7 +85,7 @@ En haut du tableau de bord, une carte **« Créer un lien pour une classe »** p
 
 #### Mode projection
 
-Le bouton **« Mode projection »** (à côté du sélecteur de classe) ouvre `projection.html` dans un nouvel onglet : une vue simplifiée, en gros caractères, sans aucun contrôle d'administration, qui reprend la classe (ou la vue combinée) actuellement affichée et **s'actualise automatiquement** (toutes les 10 secondes) pendant que les élèves répondent — pratique à projeter au tableau en classe. Protégée par le même mot de passe que le reste du tableau de bord ; si le navigateur a déjà une session active, elle s'ouvre directement sans redemander la connexion.
+Le bouton **« Mode projection »** (à côté du sélecteur de classe) ouvre `projection.html` dans un nouvel onglet : une vue simplifiée, en gros caractères, sans aucun contrôle d'administration, qui reprend la classe (ou la vue combinée) actuellement affichée — nombre de réponses, jauge, répartition par usage et équivalences concrètes (avion, voiture, bouteilles, forêt rasée), comme dans l'onglet Statistiques — et **s'actualise automatiquement** (toutes les 10 secondes) pendant que les élèves répondent — pratique à projeter au tableau en classe. Protégée par le même mot de passe que le reste du tableau de bord ; si le navigateur a déjà une session active, elle s'ouvre directement sans redemander la connexion.
 
 #### Exporter les données en CSV
 
