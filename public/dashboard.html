@@ -66,21 +66,8 @@
   </div>
 
   <div id="app-state" hidden>
-    <div class="hero" style="padding-block: 0 8px;">
-      <label class="field class-select-field no-print">
-        <span>Classe affichée</span>
-        <select id="class-select">
-          <option value="">Toutes les classes (combiné)</option>
-        </select>
-      </label>
-      <p class="context-line" id="scope-summary"></p>
-      <p class="dashboard-updated no-print" id="dashboard-updated"></p>
-      <button class="btn btn-ghost btn-sm no-print" id="projection-btn" type="button">🖥️ Mode projection</button>
-    </div>
-
     <div class="tabs no-print" id="dashboard-tabs" role="tablist">
       <button class="tab-btn is-active" id="tab-btn-stats" data-tab="stats" role="tab" aria-selected="true" aria-controls="tab-panel-stats" type="button">📊 Statistiques</button>
-      <button class="tab-btn" id="tab-btn-compare" data-tab="compare" role="tab" aria-selected="false" aria-controls="tab-panel-compare" type="button">📈 Comparer</button>
       <button class="tab-btn" id="tab-btn-manage" data-tab="manage" role="tab" aria-selected="false" aria-controls="tab-panel-manage" type="button">🧑‍🎓 Classe</button>
       <button class="tab-btn" id="tab-btn-share" data-tab="share" role="tab" aria-selected="false" aria-controls="tab-panel-share" type="button">🔗 Partager</button>
       <button class="tab-btn" id="tab-btn-account" data-tab="account" role="tab" aria-selected="false" aria-controls="tab-panel-account" type="button">🔑 Compte</button>
@@ -96,6 +83,23 @@
     </div>
 
     <div class="tab-panel is-active" id="tab-panel-stats" role="tabpanel" aria-labelledby="tab-btn-stats">
+      <div class="card no-print" id="stats-class-picker-card">
+        <h2 class="card-title">Classes affichées</h2>
+        <p class="card-hint">Coche une classe pour voir ses statistiques, ou plusieurs pour voir leur moyenne combinée.</p>
+        <div id="stats-class-list" class="manage-list"></div>
+      </div>
+
+      <p class="context-line" id="scope-summary"></p>
+      <div class="dashboard-toolbar no-print">
+        <p class="dashboard-updated" id="dashboard-updated"></p>
+        <button class="btn btn-ghost btn-sm" id="projection-btn" type="button">🖥️ Mode projection</button>
+      </div>
+
+      <div id="stats-empty-selection" class="empty-state" hidden>
+        <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 16v10M24 32h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <p>Sélectionne au moins une classe ci-dessus pour voir les statistiques.</p>
+      </div>
+
       <div id="content-block" class="results" hidden>
 
         <div id="no-data-note" class="empty-state" hidden>
@@ -187,49 +191,19 @@
       </div>
     </div>
 
-    <div class="tab-panel" id="tab-panel-compare" role="tabpanel" aria-labelledby="tab-btn-compare" hidden>
-      <div class="card no-print" id="compare-select-card">
-        <h2 class="card-title">Classes à comparer</h2>
-        <p class="card-hint">Coche les classes à inclure dans la comparaison.</p>
-        <div id="compare-class-list" class="manage-list"></div>
-      </div>
-
-      <div id="compare-empty" class="empty-state" hidden>
-        <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 16v10M24 32h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <p id="compare-empty-text">Sélectionne au moins une classe pour voir la comparaison.</p>
-      </div>
-
-      <div id="compare-results" hidden>
-        <div class="card">
-          <h2 class="card-title">Vue d'ensemble de la sélection</h2>
-          <div class="stat-grid">
-            <div class="stat-tile">
-              <p class="stat-tile-value" id="compare-classes-count">–</p>
-              <p class="stat-tile-label">classes sélectionnées</p>
-            </div>
-            <div class="stat-tile">
-              <p class="stat-tile-value" id="compare-total-count">–</p>
-              <p class="stat-tile-label">réponses au total</p>
-            </div>
-            <div class="stat-tile">
-              <p class="stat-tile-value" id="compare-combined-avg">–</p>
-              <p class="stat-tile-label">moyenne combinée (kg/an)</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2 class="card-title">Moyenne par classe</h2>
-          <div id="compare-chart" class="breakdown-chart"></div>
-          <p class="breakdown-legend"><span class="ref-mark-swatch"></span> Profil de référence, ~229 kg CO<sub>2</sub>e/an</p>
-        </div>
-      </div>
-    </div>
-
     <div class="tab-panel" id="tab-panel-manage" role="tabpanel" aria-labelledby="tab-btn-manage" hidden>
+      <div class="card no-print" id="manage-class-picker-card">
+        <label class="field class-select-field">
+          <span>Classe à gérer</span>
+          <select id="manage-class-select">
+            <option value="">— Choisir une classe —</option>
+          </select>
+        </label>
+      </div>
+
       <div id="manage-select-class-hint" class="empty-state">
         <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 16v10M24 32h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <p>Choisis une classe précise dans le menu déroulant ci-dessus pour gérer sa politique de réponse et ses élèves.</p>
+        <p>Choisis une classe dans le menu ci-dessus pour gérer sa politique de réponse et ses élèves.</p>
       </div>
 
       <div class="card no-print" id="class-policy-card" hidden>

@@ -16,7 +16,10 @@
 
   const REFRESH_MS = 10000;
 
-  const classe = new URLSearchParams(window.location.search).get("classe") || "";
+  const classeParam = new URLSearchParams(window.location.search).get("classe") || "";
+  const classesList = classeParam
+    ? classeParam.split(",").map((s) => s.trim()).filter(Boolean)
+    : [];
 
   const loginStateEl = document.getElementById("login-state");
   const projStateEl = document.getElementById("proj-state");
@@ -30,7 +33,12 @@
   const contentEl = document.getElementById("proj-content");
   const updatedEl = document.getElementById("proj-updated");
 
-  document.getElementById("proj-title").textContent = classe ? `Classe ${classe}` : "Toutes les classes";
+  document.getElementById("proj-title").textContent =
+    classesList.length === 1
+      ? `Classe ${classesList[0]}`
+      : classesList.length > 1
+      ? `${classesList.length} classes sélectionnées`
+      : "Toutes les classes";
 
   function showProj() {
     loginStateEl.hidden = true;
@@ -85,7 +93,7 @@
   async function refresh() {
     let stats;
     try {
-      const url = classe ? `api/stats?classe=${encodeURIComponent(classe)}` : "api/stats";
+      const url = classesList.length ? `api/stats?classes=${classesList.map(encodeURIComponent).join(",")}` : "api/stats";
       const res = await fetch(url);
       if (res.status === 401) {
         showLogin();

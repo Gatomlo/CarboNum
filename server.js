@@ -366,18 +366,31 @@ app.post("/api/class-settings/unlock-student", requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-// ?classe=... limite aux réponses de cette classe ; sans paramètre,
-// renvoie les statistiques combinées de toutes les classes. Dans les
-// deux cas, seules les réponses non exclues (included = 1) comptent.
+// ?classes=A,B,C limite aux réponses de ces classes précises et renvoie
+// leur moyenne combinée (utilisé par la sélection multiple de l'onglet
+// Statistiques). À défaut, ?classe=... limite à une seule classe ; sans
+// aucun paramètre, renvoie les statistiques combinées de toutes les
+// classes (compatibilité avec les anciens liens). Dans tous les cas,
+// seules les réponses non exclues (included = 1) comptent.
 app.get("/api/stats", requireAdmin, (req, res) => {
-  const classe = sanitizeLabel(req.query.classe || "");
   const all = db.getAll();
-  const rows = all.filter((r) => r.included && (!classe || r.classe === classe));
+  let rows, classesCount;
+
+  if (req.query.classes !== undefined) {
+    const classesList = String(req.query.classes)
+      .split(",")
+      .map((s) => sanitizeLabel(s.trim()))
+      .filter(Boolean);
+    rows = all.filter((r) => r.included && classesList.includes(r.classe));
+    classesCount = classesList.length;
+  } else {
+    const classe = sanitizeLabel(req.query.classe || "");
+    rows = all.filter((r) => r.included && (!classe || r.classe === classe));
+    classesCount = classe ? 1 : new Set(all.filter((r) => r.classe && r.included).map((r) => r.classe)).size;
+  }
 
   const stats = computeStats(rows);
-  if (!classe) {
-    stats.classesCount = new Set(all.filter((r) => r.classe && r.included).map((r) => r.classe)).size;
-  }
+  stats.classesCount = classesCount;
   res.json(stats);
 });
 
@@ -440,11 +453,23 @@ function safeFilenamePart(s) {
   return cleaned || "classe";
 }
 
-// Export CSV des réponses d'une classe (?classe=...) ou de toutes les
-// classes, pour archiver ou comparer les données avant une réinitialisation.
+// Export CSV des réponses d'une ou plusieurs classes (?classes=A,B,C ou
+// ?classe=...) ou de toutes les classes, pour archiver ou comparer les
+// données avant une suppression.
 app.get("/api/export.csv", requireAdmin, (req, res) => {
-  const classe = sanitizeLabel(req.query.classe || "");
-  const rows = db.getAll().filter((r) => !classe || r.classe === classe);
+  let rows, filenamePart;
+  if (req.query.classes !== undefined) {
+    const classesList = String(req.query.classes)
+      .split(",")
+      .map((s) => sanitizeLabel(s.trim()))
+      .filter(Boolean);
+    rows = db.getAll().filter((r) => classesList.includes(r.classe));
+    filenamePart = classesList.length === 1 ? safeFilenamePart(classesList[0]) : "classes-selectionnees";
+  } else {
+    const classe = sanitizeLabel(req.query.classe || "");
+    rows = db.getAll().filter((r) => !classe || r.classe === classe);
+    filenamePart = classe ? safeFilenamePart(classe) : "toutes-classes";
+  }
 
   const header = ["classe", "eleve", "inclus", "total_kg", ...CATEGORIES, "date"];
   const lines = [header.map(csvField).join(",")];
@@ -453,7 +478,7 @@ app.get("/api/export.csv", requireAdmin, (req, res) => {
     lines.push(line.map(csvField).join(","));
   }
 
-  const filename = `empreinte-${classe ? safeFilenamePart(classe) : "toutes-classes"}.csv`;
+  const filename = `empreinte-${filenamePart}.csv`;
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
   res.send(`﻿${lines.join("\r\n")}`);

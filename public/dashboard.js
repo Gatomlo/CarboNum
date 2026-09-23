@@ -9,11 +9,15 @@
    du serveur Node (server.js). N'a aucun effet en hébergement statique
    (GitHub Pages…) : l'écran de connexion l'indique dès la tentative.
 
-   Une classe peut être sélectionnée via le sélecteur ou l'URL
-   (?classe=5B) ; sans sélection, les statistiques combinent toutes
-   les classes ayant répondu. Quand une classe précise est affichée,
-   une liste permet d'inclure/exclure chaque élève (par pseudo) du
-   calcul des statistiques sans supprimer sa réponse.
+   L'onglet Statistiques a sa propre liste de classes à cocher
+   (?classe=5B ou ?classe=5B,6A dans l'URL pour la pré-remplir) : une
+   seule classe cochée affiche ses stats, plusieurs cochées affichent
+   leur moyenne combinée (pondérée par le nombre de réponses). L'onglet
+   Classe a son propre sélecteur, indépendant, pour choisir la classe
+   dont on gère la politique de réponse et les élèves (inclusion,
+   exclusion, déblocage). Une liste permet d'inclure/exclure chaque
+   élève (par pseudo) du calcul des statistiques sans supprimer sa
+   réponse.
    =================================================================== */
 
 (function () {
@@ -29,7 +33,10 @@
   const statsCardsEl = document.getElementById("stats-cards");
   const manageCard = document.getElementById("manage-card");
   const manageList = document.getElementById("manage-list");
-  const classSelect = document.getElementById("class-select");
+  const manageClassSelect = document.getElementById("manage-class-select");
+  const statsClassPickerCard = document.getElementById("stats-class-picker-card");
+  const statsClassList = document.getElementById("stats-class-list");
+  const statsEmptySelection = document.getElementById("stats-empty-selection");
   const scopeSummary = document.getElementById("scope-summary");
   const dashboardUpdated = document.getElementById("dashboard-updated");
 
@@ -61,8 +68,8 @@
   function startAutoRefresh() {
     if (autoRefreshTimer) return;
     autoRefreshTimer = setInterval(() => {
-      loadStats(currentClasse(), { silent: true });
-      loadComparison();
+      loadStats({ silent: true });
+      if (manageClassSelect.value) loadManageClassData(manageClassSelect.value);
     }, AUTO_REFRESH_MS);
   }
 
@@ -249,9 +256,6 @@
     }
   });
 
-  function currentClasse() {
-    return classSelect.value || "";
-  }
 
   // ---- Générateur de lien de classe ----
 
@@ -313,10 +317,16 @@
     }
   });
 
-  function updateUrl(classe) {
+  // Reflète la sélection de l'onglet Statistiques dans l'URL (pour
+  // pouvoir la partager ou la retrouver après rechargement) — omise
+  // quand elle correspond à "toutes les classes" (comportement par
+  // défaut) ou quand rien n'est sélectionné.
+  function updateUrlForSelection() {
     const url = new URL(window.location.href);
-    if (classe) url.searchParams.set("classe", classe);
-    else url.searchParams.delete("classe");
+    const classesArr = Array.from(selectedStatsClasses);
+    const allSelected = knownClasses.length > 0 && classesArr.length === knownClasses.length;
+    if (classesArr.length === 0 || allSelected) url.searchParams.delete("classe");
+    else url.searchParams.set("classe", classesArr.join(","));
     window.history.replaceState({}, "", url);
   }
 
@@ -346,10 +356,16 @@
     }
   }
 
-  async function populateClassSelect(preselect) {
+  // Peuple le sélecteur (unique) de l'onglet Classe et la liste à cocher
+  // (multiple) de l'onglet Statistiques à partir de /api/classes.
+  // preselectManage : code de classe à présélectionner dans l'onglet
+  // Classe (undefined/absent = ne pas y toucher, "" = désélectionner).
+  // preselectStatsList : tableau de classes à cocher dans l'onglet
+  // Statistiques lors du tout premier appel (voir renderStatsClassList).
+  async function populateClasses(preselectManage, preselectStatsList) {
     try {
       const res = await fetch("api/classes");
-      if (redirectToLoginIfUnauthorized(res)) return classSelect.value;
+      if (redirectToLoginIfUnauthorized(res)) return;
       if (res.ok) {
         knownClasses = (await res.json()).classes || [];
         writeCachedClasses(knownClasses);
@@ -358,68 +374,67 @@
       /* échec réseau : on garde la dernière liste connue, on ne la vide pas */
     }
 
-    classSelect.innerHTML = "";
-    const allOpt = document.createElement("option");
-    allOpt.value = "";
-    allOpt.textContent = "Toutes les classes (combiné)";
-    classSelect.appendChild(allOpt);
-
+    const manageValue = preselectManage === undefined ? manageClassSelect.value : preselectManage;
+    manageClassSelect.innerHTML = "";
+    const emptyOpt = document.createElement("option");
+    emptyOpt.value = "";
+    emptyOpt.textContent = "— Choisir une classe —";
+    manageClassSelect.appendChild(emptyOpt);
     knownClasses.forEach((c) => {
       const opt = document.createElement("option");
       opt.value = c.classe;
       opt.textContent = `${c.classe} (${c.count})`;
-      classSelect.appendChild(opt);
+      manageClassSelect.appendChild(opt);
     });
+    manageClassSelect.value = knownClasses.some((c) => c.classe === manageValue) ? manageValue : "";
 
-    classSelect.value = knownClasses.some((c) => c.classe === preselect) ? preselect : "";
-
-    renderCompareClassList();
+    renderStatsClassList(preselectStatsList);
     renderDeleteClassesList();
-
-    return classSelect.value;
   }
 
-  // ---- Comparaison entre classes ----
-  // Sélection indépendante du sélecteur principal : coche les classes à
-  // comparer, moyenne combinée calculée en pondérant par le nombre de
-  // réponses de chaque classe (comme la vue "Toutes les classes"
-  // combinée, mais restreinte aux classes choisies ici).
+  // ---- Sélection des classes affichées dans l'onglet Statistiques ----
+  // Coche à coche, plutôt qu'un unique menu : une classe cochée affiche
+  // ses statistiques, plusieurs cochées affichent leur moyenne combinée
+  // (pondérée par le nombre de réponses, calculée côté serveur).
 
-  const compareClassList = document.getElementById("compare-class-list");
-  const compareEmpty = document.getElementById("compare-empty");
-  const compareEmptyText = document.getElementById("compare-empty-text");
-  const compareResults = document.getElementById("compare-results");
-  const compareClassesCount = document.getElementById("compare-classes-count");
-  const compareTotalCount = document.getElementById("compare-total-count");
-  const compareCombinedAvg = document.getElementById("compare-combined-avg");
-  const compareChart = document.getElementById("compare-chart");
+  const selectedStatsClasses = new Set();
+  let statsListInitialized = false;
 
-  const selectedCompareClasses = new Set();
-  let compareListInitialized = false;
+  function renderStatsClassList(preselectList) {
+    statsClassPickerCard.hidden = knownClasses.length === 0;
 
-  function renderCompareClassList() {
-    // Par défaut, toutes les classes connues sont incluses — l'enseignant·e
-    // peut ensuite en décocher pour restreindre la comparaison. Ne se
-    // produit qu'une fois, pour ne pas re-cocher une classe désélectionnée
-    // volontairement lors d'un rafraîchissement suivant.
-    if (!compareListInitialized && knownClasses.length > 0) {
-      knownClasses.forEach((c) => selectedCompareClasses.add(c.classe));
-      compareListInitialized = true;
+    if (!statsListInitialized) {
+      if (preselectList && preselectList.length) {
+        preselectList.forEach((c) => {
+          if (knownClasses.some((k) => k.classe === c)) selectedStatsClasses.add(c);
+        });
+      } else {
+        // Par défaut, toutes les classes connues sont cochées ("toutes
+        // classes confondues").
+        knownClasses.forEach((c) => selectedStatsClasses.add(c.classe));
+      }
+      statsListInitialized = true;
+    } else {
+      // Une classe supprimée entretemps ne doit plus rester cochée.
+      Array.from(selectedStatsClasses).forEach((c) => {
+        if (!knownClasses.some((k) => k.classe === c)) selectedStatsClasses.delete(c);
+      });
     }
 
-    compareClassList.innerHTML = "";
+    statsClassList.innerHTML = "";
     knownClasses.forEach((c) => {
       const row = document.createElement("label");
-      row.className = "manage-row" + (selectedCompareClasses.has(c.classe) ? "" : " is-excluded");
+      row.className = "manage-row" + (selectedStatsClasses.has(c.classe) ? "" : " is-excluded");
 
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
-      checkbox.checked = selectedCompareClasses.has(c.classe);
+      checkbox.checked = selectedStatsClasses.has(c.classe);
       checkbox.addEventListener("change", () => {
-        if (checkbox.checked) selectedCompareClasses.add(c.classe);
-        else selectedCompareClasses.delete(c.classe);
+        if (checkbox.checked) selectedStatsClasses.add(c.classe);
+        else selectedStatsClasses.delete(c.classe);
         row.classList.toggle("is-excluded", !checkbox.checked);
-        loadComparison();
+        updateUrlForSelection();
+        loadStats();
       });
 
       const label = document.createElement("span");
@@ -427,72 +442,8 @@
       label.textContent = `${c.classe} (${c.count})`;
 
       row.append(checkbox, label);
-      compareClassList.appendChild(row);
+      statsClassList.appendChild(row);
     });
-  }
-
-  function renderClassComparisonChart(container, entries) {
-    container.innerHTML = "";
-    const max = Math.max(...entries.map((e) => e.avg), REFERENCE_MOYENNE_BE, 0.0001);
-
-    entries.forEach((e) => {
-      const row = document.createElement("div");
-      row.className = "bar-row";
-      const refPct = Math.min((REFERENCE_MOYENNE_BE / max) * 100, 100);
-      row.innerHTML = `
-        <div class="bar-row-label">${e.classe} (${fmt(e.count, 0)})</div>
-        <div class="bar-track">
-          <div class="bar-fill" style="width:${(e.avg / max) * 100}%;background:var(--accent)"></div>
-          <div class="bar-ref-mark" style="left:${refPct}%" title="Profil de référence : ${fmt(REFERENCE_MOYENNE_BE, 0)} kg"></div>
-        </div>
-        <div class="bar-value">${fmt(e.avg, 0)} kg</div>
-      `;
-      container.appendChild(row);
-    });
-  }
-
-  async function loadComparison() {
-    if (selectedCompareClasses.size === 0) {
-      compareResults.hidden = true;
-      compareEmptyText.textContent = "Sélectionne au moins une classe pour voir la comparaison.";
-      compareEmpty.hidden = false;
-      return;
-    }
-
-    const results = await Promise.all(
-      Array.from(selectedCompareClasses).map(async (classe) => {
-        try {
-          const res = await fetch(`api/stats?classe=${encodeURIComponent(classe)}`);
-          if (redirectToLoginIfUnauthorized(res)) return null;
-          if (!res.ok) return null;
-          const stats = await res.json();
-          return { classe, count: stats.count || 0, avg: stats.avg || 0 };
-        } catch (e) {
-          return null;
-        }
-      })
-    );
-
-    const valid = results.filter((r) => r && r.count > 0);
-    if (!valid.length) {
-      compareResults.hidden = true;
-      compareEmptyText.textContent = "Aucune réponse comptabilisée pour les classes sélectionnées.";
-      compareEmpty.hidden = false;
-      return;
-    }
-
-    compareEmpty.hidden = true;
-    compareResults.hidden = false;
-
-    const totalCount = valid.reduce((sum, r) => sum + r.count, 0);
-    const combinedAvg = valid.reduce((sum, r) => sum + r.avg * r.count, 0) / totalCount;
-
-    compareClassesCount.textContent = fmt(valid.length, 0);
-    compareTotalCount.textContent = fmt(totalCount, 0);
-    compareCombinedAvg.textContent = fmt(combinedAvg, 0);
-
-    const sorted = [...valid].sort((a, b) => b.avg - a.avg);
-    renderClassComparisonChart(compareChart, sorted);
   }
 
   function renderBreakdown(avgByCategory) {
@@ -537,7 +488,7 @@
   }
 
   classPolicySelect.addEventListener("change", async () => {
-    const classe = currentClasse();
+    const classe = manageClassSelect.value;
     if (!classe) return;
     const policy = classPolicySelect.value;
     classPolicySelect.disabled = true;
@@ -559,7 +510,7 @@
   });
 
   unlockAllCheckbox.addEventListener("change", async () => {
-    const classe = currentClasse();
+    const classe = manageClassSelect.value;
     if (!classe) return;
     const wanted = unlockAllCheckbox.checked;
     unlockAllCheckbox.disabled = true;
@@ -621,8 +572,8 @@
           });
           if (redirectToLoginIfUnauthorized(res)) return;
           if (!res.ok) throw new Error("bad status");
-          const resolved = await populateClassSelect(currentClasse()); // rafraîchit le compte affiché dans le sélecteur
-          loadStats(resolved, { silent: true }); // rafraîchit stats + liste, sans écran de chargement
+          await populateClasses(manageClassSelect.value, null); // rafraîchit les compteurs affichés
+          loadStats({ silent: true }); // rafraîchit les stats, sans écran de chargement
         } catch (e) {
           checkbox.checked = !checkbox.checked; // annule le changement affiché
           alert("Impossible de mettre à jour cet élève (serveur inaccessible).");
@@ -681,8 +632,35 @@
 
   // ---- Statistiques ----
 
-  async function loadStats(classe, options) {
+  async function loadStats(options) {
     const silent = options && options.silent;
+    const classesArr = Array.from(selectedStatsClasses);
+
+    // Aucune classe n'a encore jamais répondu : rien à cocher, ce n'est
+    // pas la même situation qu'un enseignant qui aurait tout décoché.
+    if (knownClasses.length === 0) {
+      loadingEl.hidden = true;
+      errorEl.hidden = true;
+      statsEmptySelection.hidden = true;
+      contentEl.hidden = false;
+      statsCardsEl.hidden = true;
+      dashboardUpdated.textContent = "";
+      scopeSummary.textContent = "Aucune réponse comptabilisée pour l'instant.";
+      noDataText.innerHTML = "Aucune réponse comptabilisée pour l'instant.<br>Demande à tes élèves de calculer leur empreinte et de cliquer sur « Partager mon résultat » à la fin.";
+      noDataEl.hidden = false;
+      return;
+    }
+
+    if (classesArr.length === 0) {
+      loadingEl.hidden = true;
+      errorEl.hidden = true;
+      contentEl.hidden = true;
+      statsEmptySelection.hidden = false;
+      scopeSummary.textContent = "Aucune classe sélectionnée.";
+      dashboardUpdated.textContent = "";
+      return;
+    }
+    statsEmptySelection.hidden = true;
 
     if (!silent) {
       contentEl.hidden = true;
@@ -690,9 +668,11 @@
       loadingEl.hidden = false;
     }
 
+    const allSelected = knownClasses.length > 0 && classesArr.length === knownClasses.length;
+
     let stats;
     try {
-      const url = classe ? `api/stats?classe=${encodeURIComponent(classe)}` : "api/stats";
+      const url = `api/stats?classes=${classesArr.map(encodeURIComponent).join(",")}`;
       const res = await fetch(url);
       if (redirectToLoginIfUnauthorized(res)) return;
       if (!res.ok) throw new Error("bad status");
@@ -708,15 +688,20 @@
     contentEl.hidden = false;
     dashboardUpdated.textContent = `Actualisé à ${new Date().toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
 
-    scopeSummary.textContent = classe
-      ? `Classe « ${classe} » — ${fmt(stats.count, 0)} réponse(s) comptabilisée(s).`
-      : `Toutes classes confondues — ${fmt(stats.count, 0)} réponse(s) comptabilisée(s)${stats.classesCount ? ` sur ${fmt(stats.classesCount, 0)} classe(s)` : ""}.`;
+    if (classesArr.length === 1) {
+      scopeSummary.textContent = `Classe « ${classesArr[0]} » — ${fmt(stats.count, 0)} réponse(s) comptabilisée(s).`;
+    } else if (allSelected) {
+      scopeSummary.textContent = `Toutes classes confondues — ${fmt(stats.count, 0)} réponse(s) comptabilisée(s) sur ${fmt(stats.classesCount, 0)} classe(s).`;
+    } else {
+      scopeSummary.textContent = `Moyenne combinée de ${fmt(classesArr.length, 0)} classes sélectionnées — ${fmt(stats.count, 0)} réponse(s) comptabilisée(s).`;
+    }
 
     if (!stats.count) {
       statsCardsEl.hidden = true;
-      noDataText.innerHTML = classe
-        ? `Aucune réponse comptabilisée pour la classe « ${classe} » pour l'instant.`
-        : "Aucune réponse comptabilisée pour l'instant, toutes classes confondues.";
+      noDataText.innerHTML =
+        classesArr.length === 1
+          ? `Aucune réponse comptabilisée pour la classe « ${classesArr[0]} » pour l'instant.`
+          : "Aucune réponse comptabilisée pour l'instant, pour les classes sélectionnées.";
       noDataEl.hidden = false;
     } else {
       noDataEl.hidden = true;
@@ -769,25 +754,32 @@
       );
     }
 
+  }
+
+  // Charge la politique de réponse et la liste des élèves de la classe
+  // choisie dans l'onglet Classe — indépendant de la sélection (multiple)
+  // de l'onglet Statistiques.
+  async function loadManageClassData(classe) {
     await loadClassSettings(classe);
-    const { excludedCount } = await loadManageList(classe);
-    if (excludedCount > 0) {
-      scopeSummary.textContent += ` (${excludedCount} exclu${excludedCount > 1 ? "s" : ""} de la classe)`;
-    }
+    await loadManageList(classe);
   }
 
   async function init() {
-    const initialClasse = new URLSearchParams(window.location.search).get("classe") || "";
-    const resolved = await populateClassSelect(initialClasse);
-    updateUrl(resolved);
-    loadStats(resolved);
-    loadComparison();
+    const params = new URLSearchParams(window.location.search);
+    const classeParam = params.get("classe") || "";
+    const initialStatsList = classeParam
+      ? classeParam.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
+    const initialManage = initialStatsList.length === 1 ? initialStatsList[0] : "";
+
+    await populateClasses(initialManage, initialStatsList);
+    updateUrlForSelection();
+    loadStats();
+    loadManageClassData(manageClassSelect.value);
   }
 
-  classSelect.addEventListener("change", () => {
-    const classe = currentClasse();
-    updateUrl(classe);
-    loadStats(classe);
+  manageClassSelect.addEventListener("change", () => {
+    loadManageClassData(manageClassSelect.value);
   });
 
   // ---- Supprimer les données d'une classe (classe par classe, plutôt
@@ -824,11 +816,12 @@
           const res = await fetch(`api/submissions?classe=${encodeURIComponent(c.classe)}`, { method: "DELETE" });
           if (redirectToLoginIfUnauthorized(res)) return;
           if (!res.ok) throw new Error("bad status");
-          selectedCompareClasses.delete(c.classe);
-          const wasSelected = currentClasse() === c.classe;
-          const resolved = await populateClassSelect(wasSelected ? "" : currentClasse());
-          updateUrl(resolved);
-          loadStats(resolved);
+          selectedStatsClasses.delete(c.classe);
+          const wasManageSelected = manageClassSelect.value === c.classe;
+          await populateClasses(wasManageSelected ? "" : manageClassSelect.value, null);
+          updateUrlForSelection();
+          loadStats();
+          loadManageClassData(manageClassSelect.value);
         } catch (e) {
           alert("Impossible de supprimer cette classe (serveur inaccessible).");
           delBtn.disabled = false;
@@ -843,9 +836,10 @@
   // ---- Mode projection (vue simplifiée, actualisée automatiquement) ----
 
   document.getElementById("projection-btn").addEventListener("click", () => {
-    const classe = currentClasse();
+    const classesArr = Array.from(selectedStatsClasses);
+    const allSelected = knownClasses.length > 0 && classesArr.length === knownClasses.length;
     const url = new URL("projection.html", window.location.href);
-    if (classe) url.searchParams.set("classe", classe);
+    if (classesArr.length > 0 && !allSelected) url.searchParams.set("classe", classesArr.join(","));
     window.open(url.toString(), "_blank", "noopener");
   });
 
@@ -858,8 +852,9 @@
   // ---- Export CSV ----
 
   document.getElementById("export-csv-btn").addEventListener("click", async () => {
-    const classe = currentClasse();
-    const url = classe ? `api/export.csv?classe=${encodeURIComponent(classe)}` : "api/export.csv";
+    const classesArr = Array.from(selectedStatsClasses);
+    if (classesArr.length === 0) return;
+    const url = `api/export.csv?classes=${classesArr.map(encodeURIComponent).join(",")}`;
     try {
       const res = await fetch(url);
       if (redirectToLoginIfUnauthorized(res)) return;
@@ -884,7 +879,6 @@
   const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
   const tabPanels = {
     stats: document.getElementById("tab-panel-stats"),
-    compare: document.getElementById("tab-panel-compare"),
     manage: document.getElementById("tab-panel-manage"),
     share: document.getElementById("tab-panel-share"),
     account: document.getElementById("tab-panel-account"),

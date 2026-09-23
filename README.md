@@ -46,16 +46,13 @@ Sur la page du calculateur, un lien discret « Espace enseignant → » en bas d
 
 À la fin du calculateur, **le résultat de chaque élève est transmis automatiquement** — ce n'est pas une action optionnelle : dès que le calcul est terminé, le total et la répartition par usage (avec la classe et le pseudo s'ils sont renseignés, mais jamais les réponses détaillées au questionnaire ni un nom) sont envoyés au serveur, sans que l'élève ait à cliquer sur quoi que ce soit. Un petit message discret confirme la transmission (ou explique qu'elle a échoué si le serveur est inaccessible).
 
-Une fois connecté·e, le contenu du tableau de bord est réparti en six onglets (le choix de l'onglet actif est mémorisé d'une visite à l'autre) :
+Une fois connecté·e, le contenu du tableau de bord est réparti en cinq onglets (le choix de l'onglet actif est mémorisé d'une visite à l'autre) :
 
-- **📊 Statistiques** — nombre de réponses, empreinte minimale/maximale/moyenne du groupe, jauge, répartition par usage, et les mêmes équivalences concrètes que sur les résultats d'un·e élève (km en avion/voiture, bouteilles plastique, m² de forêt rasée — calculées ici sur la moyenne de la classe), avec impression et export CSV. **S'actualise automatiquement** (toutes les 10 secondes, comme le mode projection), avec l'heure de la dernière actualisation affichée sous le sélecteur de classe — pas besoin de recharger la page pendant que les élèves répondent.
-- **📈 Comparer** — coche les classes à inclure (toutes par défaut) pour voir leur moyenne comparée côte à côte, avec le nombre de réponses total et la moyenne combinée (pondérée par le nombre de réponses de chaque classe) de la sélection.
-- **🧑‍🎓 Classe** — politique de réponse (unique ou multiple, voir « Reprise après une coupure, et réponses multiples » ci-dessus) et déblocages, inclusion/exclusion des élèves de la classe affichée, et suppression définitive des données classe par classe (chaque classe a son propre bouton « Supprimer », avec confirmation en tapant le nom exact de la classe — plus de bouton unique dont la portée dépendait du sélecteur).
+- **📊 Statistiques** — une liste à cocher (toutes les classes cochées par défaut) remplace le simple sélecteur : coche une seule classe pour voir ses statistiques, ou plusieurs pour voir leur moyenne combinée (pondérée par le nombre de réponses de chaque classe). Affiche le nombre de réponses, l'empreinte minimale/maximale/moyenne du groupe, la jauge, la répartition par usage, et les mêmes équivalences concrètes que sur les résultats d'un·e élève (km en avion/voiture, bouteilles plastique, m² de forêt rasée), avec impression, export CSV et mode projection pour la sélection en cours. **S'actualise automatiquement** (toutes les 10 secondes, comme le mode projection), avec l'heure de la dernière actualisation affichée — pas besoin de recharger la page pendant que les élèves répondent. La sélection se reflète dans l'URL (`?classe=5B` pour une seule classe, `?classe=5B,6A` pour plusieurs) afin de pouvoir la retrouver ou la partager telle quelle.
+- **🧑‍🎓 Classe** — son propre sélecteur (une seule classe à la fois, indépendant de celui de l'onglet Statistiques) donne accès à la politique de réponse (unique ou multiple, voir « Reprise après une coupure, et réponses multiples » ci-dessus) et aux déblocages, à l'inclusion/exclusion des élèves de la classe choisie, et à la suppression définitive des données classe par classe (chaque classe a son propre bouton « Supprimer », avec confirmation en tapant le nom exact de la classe).
 - **🔗 Partager** — générateur de lien de classe et son QR code, avec un rappel de la syntaxe pour construire un lien à la main (`?classe=...`, `&eleve=...`).
 - **🔑 Compte** — changer le mot de passe.
 - **ℹ️ Méthodologie** — les mêmes coefficients, sources (ADEME, Arcep, GreenIT.fr, The Shift Project, Institut belge du Numérique Responsable, GIEC/FAO) et explication du profil de référence belge que la section « Méthodologie & sources » du calculateur, mais toujours visible (pas besoin qu'une classe ait déjà des réponses).
-
-Le sélecteur de classe et le mode projection restent au-dessus des onglets, puisqu'ils s'appliquent aux onglets Statistiques et Classe.
 
 #### Plusieurs classes en parallèle
 
@@ -79,16 +76,16 @@ S'il/elle a déjà **terminé et transmis** une réponse pour cette classe, un m
 - Dans l'onglet **« Classe »** du tableau de bord, la carte **« Réponses multiples »** permet de passer une classe en **« Une seule réponse par élève »** : au-delà de la première, une tentative est refusée (le message l'explique à l'élève) plutôt que de silencieusement écraser la précédente.
 - Sous cette politique, l'enseignant·e peut **débloquer à la volée** soit **toute la classe** (reste actif jusqu'à ce qu'il/elle le désactive — utile pour refaire l'exercice ensemble), soit **un·e élève en particulier** (à côté de son nom dans la liste de gestion — autorise une seule réponse de plus, puis se reverrouille automatiquement).
 
-Le tableau de bord (`dashboard.html`) propose un sélecteur pour :
+Dans l'onglet Statistiques du tableau de bord (`dashboard.html`), la liste à cocher permet :
 
-- afficher une **classe précise** (`dashboard.html?classe=5B`, ou via le menu déroulant) ;
-- ou afficher les **statistiques combinées de toutes les classes** ayant répondu (option par défaut « Toutes les classes »).
+- d'afficher une **classe précise** (`dashboard.html?classe=5B`, ou en ne cochant que cette classe) ;
+- ou d'afficher les **statistiques combinées de plusieurs classes** ayant répondu, en cochant plusieurs cases (toutes cochées par défaut = toutes les classes confondues).
 
-Une classe apparue une fois dans ce sélecteur n'en disparaît **jamais** d'elle-même (même si tous ses élèves sont exclus, voir ci-dessous, ou en cas de coupure réseau passagère) — seule une suppression explicite de cette classe (onglet « Classe », bouton « Supprimer » propre à chaque classe) la retire définitivement, elle et ses élèves.
+Une classe apparue une fois dans cette liste n'en disparaît **jamais** d'elle-même (même si tous ses élèves sont exclus, voir ci-dessous, ou en cas de coupure réseau passagère) — seule une suppression explicite de cette classe (onglet « Classe », bouton « Supprimer » propre à chaque classe) la retire définitivement, elle et ses élèves.
 
 #### Exclure un·e élève des statistiques
 
-Quand une classe précise est affichée dans le tableau de bord, une carte **« Gérer les élèves de cette classe »** liste chaque réponse par pseudo avec une case à cocher. Décocher un·e élève exclut sa réponse du calcul (compte, min/max/moyenne, répartition) sans la supprimer — utile pour une réponse test ou manifestement erronée. Elle peut être recochée à tout moment. Cette exclusion s'applique aussi à la vue combinée « Toutes les classes ».
+Dans l'onglet **« Classe »** du tableau de bord, une fois une classe choisie dans son sélecteur, une carte **« Gérer les élèves de cette classe »** liste chaque réponse par pseudo avec une case à cocher. Décocher un·e élève exclut sa réponse du calcul (compte, min/max/moyenne, répartition) sans la supprimer — utile pour une réponse test ou manifestement erronée. Elle peut être recochée à tout moment. Cette exclusion s'applique aussi dans l'onglet Statistiques, quelle que soit la sélection.
 
 #### Créer un lien pour une classe
 
@@ -96,7 +93,7 @@ En haut du tableau de bord, une carte **« Créer un lien pour une classe »** p
 
 #### Mode projection
 
-Le bouton **« Mode projection »** (à côté du sélecteur de classe) ouvre `projection.html` dans un nouvel onglet : une vue simplifiée, en gros caractères, sans aucun contrôle d'administration, qui reprend la classe (ou la vue combinée) actuellement affichée — nombre de réponses, jauge, répartition par usage et équivalences concrètes (avion, voiture, bouteilles, forêt rasée), comme dans l'onglet Statistiques — et **s'actualise automatiquement** (toutes les 10 secondes) pendant que les élèves répondent — pratique à projeter au tableau en classe. Protégée par le même mot de passe que le reste du tableau de bord ; si le navigateur a déjà une session active, elle s'ouvre directement sans redemander la connexion.
+Le bouton **« Mode projection »** (dans l'onglet Statistiques) ouvre `projection.html` dans un nouvel onglet : une vue simplifiée, en gros caractères, sans aucun contrôle d'administration, qui reprend la sélection de classes actuellement affichée — nombre de réponses, jauge, répartition par usage et équivalences concrètes (avion, voiture, bouteilles, forêt rasée), comme dans l'onglet Statistiques — et **s'actualise automatiquement** (toutes les 10 secondes) pendant que les élèves répondent — pratique à projeter au tableau en classe. Protégée par le même mot de passe que le reste du tableau de bord ; si le navigateur a déjà une session active, elle s'ouvre directement sans redemander la connexion.
 
 #### Exporter les données en CSV
 
