@@ -48,7 +48,7 @@ Sur la page du calculateur, un lien discret « Espace enseignant → » en bas d
 
 Une fois connecté·e, le contenu du tableau de bord est réparti en quatre onglets (le choix de l'onglet actif est mémorisé d'une visite à l'autre) :
 
-- **📊 Statistiques** — nombre de réponses, empreinte minimale/maximale/moyenne du groupe, jauge et répartition par usage, avec impression et export CSV.
+- **📊 Statistiques** — nombre de réponses, empreinte minimale/maximale/moyenne du groupe, jauge et répartition par usage, avec impression et export CSV. **S'actualise automatiquement** (toutes les 10 secondes, comme le mode projection), avec l'heure de la dernière actualisation affichée sous le sélecteur de classe — pas besoin de recharger la page pendant que les élèves répondent.
 - **🧑‍🎓 Gérer la classe** — inclusion/exclusion des élèves, réinitialisation des données.
 - **🔗 Partager** — générateur de lien de classe et son QR code.
 - **🔑 Compte** — changer le mot de passe.

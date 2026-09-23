@@ -505,6 +505,8 @@ input[type="range"]::-moz-range-thumb {
 
 .class-select-field { max-width: 320px; margin-top: 18px; }
 
+.dashboard-updated { color: var(--muted); font-size: .78rem; font-family: var(--font-mono); margin-top: 4px; }
+
 /* onglets du tableau de bord */
 
 .tabs {

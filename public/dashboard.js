@@ -31,6 +31,7 @@
   const manageList = document.getElementById("manage-list");
   const classSelect = document.getElementById("class-select");
   const scopeSummary = document.getElementById("scope-summary");
+  const dashboardUpdated = document.getElementById("dashboard-updated");
   const resetBtn = document.getElementById("reset-btn");
 
   // ---- Connexion (mot de passe unique, session en mémoire côté serveur) ----
@@ -51,11 +52,33 @@
   const setupPasswordConfirmInput = document.getElementById("setup-password-confirm");
   const setupError = document.getElementById("setup-error");
 
+  // Actualisation automatique des statistiques affichées (et de la liste
+  // de gestion, rafraîchie avec elles — voir la fin de loadStats), au
+  // même rythme que le mode projection : pas besoin de recharger la page
+  // pendant que les élèves répondent.
+  const AUTO_REFRESH_MS = 10000;
+  let autoRefreshTimer = null;
+
+  function startAutoRefresh() {
+    if (autoRefreshTimer) return;
+    autoRefreshTimer = setInterval(() => {
+      loadStats(currentClasse(), { silent: true });
+    }, AUTO_REFRESH_MS);
+  }
+
+  function stopAutoRefresh() {
+    if (autoRefreshTimer) {
+      clearInterval(autoRefreshTimer);
+      autoRefreshTimer = null;
+    }
+  }
+
   function showApp() {
     setupStateEl.hidden = true;
     loginStateEl.hidden = true;
     appStateEl.hidden = false;
     logoutBtn.hidden = false;
+    startAutoRefresh();
   }
 
   function showLogin() {
@@ -63,6 +86,7 @@
     appStateEl.hidden = true;
     loginStateEl.hidden = false;
     logoutBtn.hidden = true;
+    stopAutoRefresh();
   }
 
   function showSetup() {
@@ -70,6 +94,7 @@
     loginStateEl.hidden = true;
     setupStateEl.hidden = false;
     logoutBtn.hidden = true;
+    stopAutoRefresh();
   }
 
   // À utiliser juste après un fetch() vers une route de données : si la
@@ -448,6 +473,7 @@
 
     loadingEl.hidden = true;
     contentEl.hidden = false;
+    dashboardUpdated.textContent = `Actualisé à ${new Date().toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
 
     scopeSummary.textContent = classe
       ? `Classe « ${classe} » — ${fmt(stats.count, 0)} réponse(s) comptabilisée(s).`
