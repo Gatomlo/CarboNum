@@ -19,7 +19,7 @@
 (function () {
   "use strict";
 
-  const { REFERENCE_MOYENNE_BE, fmt, renderGaugeInto, renderBreakdownInto } = window.EmpreinteShared;
+  const { REFERENCE_MOYENNE_BE, fmt, renderGaugeInto, renderBreakdownInto, renderEquivalencesInto } = window.EmpreinteShared;
 
   const loadingEl = document.getElementById("loading-state");
   const errorEl = document.getElementById("error-state");
@@ -520,6 +520,20 @@
       const pctOfAvg = stats.avg > 0 ? (top.value / stats.avg) * 100 : 0;
       document.getElementById("dominant-swatch").style.background = top.color;
       document.getElementById("dominant-text").innerHTML = `En moyenne, c'est <strong>${top.article}</strong> qui pèse le plus dans l'empreinte du groupe (~${fmt(top.value, 0)} kg CO2e/an, soit environ ${fmt(pctOfAvg, 0)} % de l'empreinte moyenne).`;
+
+      renderEquivalencesInto(
+        {
+          avionKm: document.getElementById("dash-eq-avion-km"),
+          avionSub: document.getElementById("dash-eq-avion-sub"),
+          voitureKm: document.getElementById("dash-eq-voiture-km"),
+          voitureSub: document.getElementById("dash-eq-voiture-sub"),
+          bouteilles: document.getElementById("dash-eq-bouteilles"),
+          bouteillesSub: document.getElementById("dash-eq-bouteilles-sub"),
+          foret: document.getElementById("dash-eq-foret"),
+          foretSub: document.getElementById("dash-eq-foret-sub"),
+        },
+        stats.avg
+      );
     }
 
     const { excludedCount } = await loadManageList(classe);

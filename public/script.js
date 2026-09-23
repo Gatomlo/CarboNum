@@ -9,7 +9,7 @@
 (function () {
   "use strict";
 
-  const { REFERENCE_MOYENNE_BE, CATEGORIES, CATEGORY_META, fmt, renderGaugeInto, renderBreakdownInto } = window.EmpreinteShared;
+  const { REFERENCE_MOYENNE_BE, CATEGORIES, CATEGORY_META, fmt, renderGaugeInto, renderBreakdownInto, renderEquivalencesInto } = window.EmpreinteShared;
 
   // -------------------------------------------------------------
   // Contexte classe / élève : résolu par paramètre d'URL
@@ -110,16 +110,6 @@
       gPerTextQuery: 3,
       gPerImage: 20,
     },
-  };
-
-  const EQUIV = {
-    avionGParKm: 230, // g CO2e / km-passager, vol moyen-courrier
-    voitureGParKm: 193, // g CO2e / km, moyenne du parc automobile
-    bouteilleG: 83, // g CO2e / bouteille plastique 0.5L (fabrication)
-    foretGParM2: 40000, // g CO2e / m², déforestation (ordre de grandeur GIEC/FAO, 35-50 t/ha)
-    refAvionKm: 1090, // Bruxelles - Barcelone, aller simple
-    refVoitureKm: 310, // Bruxelles - Paris, aller simple
-    refForetM2: 4, // surface d'un tapis de salon, pour donner une échelle
   };
 
   // -------------------------------------------------------------
@@ -473,35 +463,19 @@
     renderBreakdown(result);
     renderTips(result);
 
-    // équivalences
-    const totalG = result.total * 1000;
-
-    const kmAvion = totalG / EQUIV.avionGParKm;
-    const kmVoiture = totalG / EQUIV.voitureGParKm;
-    const nbBouteilles = totalG / EQUIV.bouteilleG;
-    const m2Foret = totalG / EQUIV.foretGParM2;
-
-    document.getElementById("eq-avion-km").textContent = `${fmt(kmAvion, 0)} km`;
-    document.getElementById("eq-voiture-km").textContent = `${fmt(kmVoiture, 0)} km`;
-    document.getElementById("eq-bouteilles").textContent = fmt(nbBouteilles, 0);
-    document.getElementById("eq-foret").textContent = `${fmt(m2Foret, 1)} m²`;
-
-    const avionTrips = kmAvion / (EQUIV.refAvionKm * 2);
-    const voitureTrips = kmVoiture / (EQUIV.refVoitureKm * 2);
-    const foretTrips = m2Foret / EQUIV.refForetM2;
-
-    document.getElementById("eq-avion-sub").textContent =
-      avionTrips >= 0.1
-        ? `≈ ${fmt(avionTrips, 1)} aller(s)-retour(s) Bruxelles ↔ Barcelone`
-        : "";
-    document.getElementById("eq-voiture-sub").textContent =
-      voitureTrips >= 0.1
-        ? `≈ ${fmt(voitureTrips, 1)} aller(s)-retour(s) Bruxelles ↔ Paris`
-        : "";
-    document.getElementById("eq-bouteilles-sub").textContent =
-      nbBouteilles >= 6 ? `≈ ${fmt(nbBouteilles / 6, 0)} packs de 6 bouteilles` : "";
-    document.getElementById("eq-foret-sub").textContent =
-      foretTrips >= 0.1 ? `≈ ${fmt(foretTrips, 1)} fois un tapis de salon (4 m²)` : "";
+    renderEquivalencesInto(
+      {
+        avionKm: document.getElementById("eq-avion-km"),
+        avionSub: document.getElementById("eq-avion-sub"),
+        voitureKm: document.getElementById("eq-voiture-km"),
+        voitureSub: document.getElementById("eq-voiture-sub"),
+        bouteilles: document.getElementById("eq-bouteilles"),
+        bouteillesSub: document.getElementById("eq-bouteilles-sub"),
+        foret: document.getElementById("eq-foret"),
+        foretSub: document.getElementById("eq-foret-sub"),
+      },
+      result.total
+    );
 
     submitResult(result);
   }

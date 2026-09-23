@@ -154,6 +154,53 @@
     return entries;
   }
 
+  // ---- Équivalences concrètes (avion, voiture, bouteilles, forêt rasée) ----
+  // Utilisé par le calculateur (empreinte d'un·e élève) et le tableau de
+  // bord (moyenne de la classe) : mêmes facteurs, même mise en forme.
+
+  const EQUIV = {
+    avionGParKm: 230, // g CO2e / km-passager, vol moyen-courrier
+    voitureGParKm: 193, // g CO2e / km, moyenne du parc automobile
+    bouteilleG: 83, // g CO2e / bouteille plastique 0.5L (fabrication)
+    foretGParM2: 40000, // g CO2e / m², déforestation (ordre de grandeur GIEC/FAO, 35-50 t/ha)
+    refAvionKm: 1090, // Bruxelles - Barcelone, aller simple
+    refVoitureKm: 310, // Bruxelles - Paris, aller simple
+    refForetM2: 4, // surface d'un tapis de salon, pour donner une échelle
+  };
+
+  function computeEquivalences(totalKg) {
+    const totalG = totalKg * 1000;
+    const kmAvion = totalG / EQUIV.avionGParKm;
+    const kmVoiture = totalG / EQUIV.voitureGParKm;
+    const nbBouteilles = totalG / EQUIV.bouteilleG;
+    const m2Foret = totalG / EQUIV.foretGParM2;
+    return {
+      kmAvion,
+      kmVoiture,
+      nbBouteilles,
+      m2Foret,
+      avionTrips: kmAvion / (EQUIV.refAvionKm * 2),
+      voitureTrips: kmVoiture / (EQUIV.refVoitureKm * 2),
+      foretTrips: m2Foret / EQUIV.refForetM2,
+    };
+  }
+
+  // els = { avionKm, avionSub, voitureKm, voitureSub, bouteilles,
+  // bouteillesSub, foret, foretSub } (éléments DOM)
+  function renderEquivalencesInto(els, totalKg) {
+    const eq = computeEquivalences(totalKg);
+
+    els.avionKm.textContent = `${fmt(eq.kmAvion, 0)} km`;
+    els.voitureKm.textContent = `${fmt(eq.kmVoiture, 0)} km`;
+    els.bouteilles.textContent = fmt(eq.nbBouteilles, 0);
+    els.foret.textContent = `${fmt(eq.m2Foret, 1)} m²`;
+
+    els.avionSub.textContent = eq.avionTrips >= 0.1 ? `≈ ${fmt(eq.avionTrips, 1)} aller(s)-retour(s) Bruxelles ↔ Barcelone` : "";
+    els.voitureSub.textContent = eq.voitureTrips >= 0.1 ? `≈ ${fmt(eq.voitureTrips, 1)} aller(s)-retour(s) Bruxelles ↔ Paris` : "";
+    els.bouteillesSub.textContent = eq.nbBouteilles >= 6 ? `≈ ${fmt(eq.nbBouteilles / 6, 0)} packs de 6 bouteilles` : "";
+    els.foretSub.textContent = eq.foretTrips >= 0.1 ? `≈ ${fmt(eq.foretTrips, 1)} fois un tapis de salon (4 m²)` : "";
+  }
+
   global.EmpreinteShared = {
     REFERENCE_MOYENNE_BE,
     REFERENCE_BREAKDOWN,
@@ -161,8 +208,11 @@
     GAUGE_BANDS,
     CATEGORIES,
     CATEGORY_META,
+    EQUIV,
     fmt,
     renderGaugeInto,
     renderBreakdownInto,
+    computeEquivalences,
+    renderEquivalencesInto,
   };
 })(window);
