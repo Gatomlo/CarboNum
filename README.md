@@ -46,13 +46,14 @@ Sur la page du calculateur, un lien discret « Espace enseignant → » en bas d
 
 À la fin du calculateur, **le résultat de chaque élève est transmis automatiquement** — ce n'est pas une action optionnelle : dès que le calcul est terminé, le total et la répartition par usage (avec la classe et le pseudo s'ils sont renseignés, mais jamais les réponses détaillées au questionnaire ni un nom) sont envoyés au serveur, sans que l'élève ait à cliquer sur quoi que ce soit. Un petit message discret confirme la transmission (ou explique qu'elle a échoué si le serveur est inaccessible).
 
-Une fois connecté·e, le contenu du tableau de bord est réparti en cinq onglets (le choix de l'onglet actif est mémorisé d'une visite à l'autre) :
+Une fois connecté·e, le contenu du tableau de bord est réparti en six onglets (le choix de l'onglet actif est mémorisé d'une visite à l'autre) :
 
 - **📊 Statistiques** — nombre de réponses, empreinte minimale/maximale/moyenne du groupe, jauge, répartition par usage, et les mêmes équivalences concrètes que sur les résultats d'un·e élève (km en avion/voiture, bouteilles plastique, m² de forêt rasée — calculées ici sur la moyenne de la classe), avec impression et export CSV. **S'actualise automatiquement** (toutes les 10 secondes, comme le mode projection), avec l'heure de la dernière actualisation affichée sous le sélecteur de classe — pas besoin de recharger la page pendant que les élèves répondent.
 - **📈 Comparer** — coche les classes à inclure (toutes par défaut) pour voir leur moyenne comparée côte à côte, avec le nombre de réponses total et la moyenne combinée (pondérée par le nombre de réponses de chaque classe) de la sélection.
 - **🧑‍🎓 Gérer la classe** — inclusion/exclusion des élèves de la classe affichée, et suppression définitive des données classe par classe (chaque classe a son propre bouton « Supprimer », qui efface ses réponses et les élèves associés — plus de bouton unique dont la portée dépendait du sélecteur).
 - **🔗 Partager** — générateur de lien de classe et son QR code, avec un rappel de la syntaxe pour construire un lien à la main (`?classe=...`, `&eleve=...`).
 - **🔑 Compte** — changer le mot de passe.
+- **ℹ️ Méthodologie** — les mêmes coefficients, sources (ADEME, Arcep, GreenIT.fr, The Shift Project, Institut belge du Numérique Responsable, GIEC/FAO) et explication du profil de référence belge que la section « Méthodologie & sources » du calculateur, mais toujours visible (pas besoin qu'une classe ait déjà des réponses).
 
 Le sélecteur de classe et le mode projection restent au-dessus des onglets, puisqu'ils s'appliquent aux onglets Statistiques et Gérer la classe.
 

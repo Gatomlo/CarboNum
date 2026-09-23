@@ -84,6 +84,7 @@
       <button class="tab-btn" id="tab-btn-manage" data-tab="manage" role="tab" aria-selected="false" aria-controls="tab-panel-manage" type="button">🧑‍🎓 Gérer la classe</button>
       <button class="tab-btn" id="tab-btn-share" data-tab="share" role="tab" aria-selected="false" aria-controls="tab-panel-share" type="button">🔗 Partager</button>
       <button class="tab-btn" id="tab-btn-account" data-tab="account" role="tab" aria-selected="false" aria-controls="tab-panel-account" type="button">🔑 Compte</button>
+      <button class="tab-btn" id="tab-btn-info" data-tab="info" role="tab" aria-selected="false" aria-controls="tab-panel-info" type="button">ℹ️ Méthodologie</button>
     </div>
 
     <div id="loading-state" class="empty-state no-print">
@@ -285,6 +286,57 @@
           <p class="identity-error" id="change-pw-error" hidden></p>
           <p class="link-gen-copied" id="change-pw-success" hidden>✓ Mot de passe mis à jour.</p>
         </form>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-panel-info" role="tabpanel" aria-labelledby="tab-btn-info" hidden>
+      <div class="card">
+        <h2 class="card-title">Méthodologie &amp; sources</h2>
+        <div class="methodology-body">
+          <p>Les coefficients utilisés dans le calculateur sont des <strong>ordres de grandeur pédagogiques</strong>, construits à partir de données publiques :</p>
+          <ul>
+            <li>ADEME — Base Carbone et étude « Évaluation environnementale des impacts du numérique en France » (2022)</li>
+            <li>Arcep</li>
+            <li>GreenIT.fr</li>
+            <li>The Shift Project</li>
+            <li>Institut belge du Numérique Responsable (fabrication d'un ordinateur portable, intensité carbone de l'électricité en Belgique)</li>
+            <li>GIEC / FAO — ordres de grandeur d'émissions liées à la déforestation</li>
+          </ul>
+          <p>Ils ne remplacent pas un bilan carbone individuel précis, mais permettent de comparer des ordres de grandeur entre usages numériques et de les situer par rapport à des repères connus.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Détail des facteurs</h2>
+        <div class="methodology-body">
+          <ul>
+            <li><strong>Fabrication des appareils</strong> : empreinte forfaitaire (ex. ~65 kg CO<sub>2</sub>e pour un smartphone milieu de gamme, ~200 kg pour un ordinateur portable, ~150 kg pour une console de jeux, ~320 kg pour une TV connectée grand écran), répartie sur la durée de vie déclarée.</li>
+            <li><strong>Usage</strong> : électricité de charge + part de réseau et de centres de données, estimée par heure d'utilisation quotidienne.</li>
+            <li><strong>Streaming vidéo</strong> : environ 30 g CO<sub>2</sub>e/h en SD, 70 g/h en HD, 200 g/h en 4K.</li>
+            <li><strong>Visioconférence</strong> : environ 150 g CO<sub>2</sub>e/h (appel bidirectionnel, ordre de grandeur entre la HD et la 4K).</li>
+            <li><strong>IA générative</strong> : environ 3 g CO<sub>2</sub>e par requête texte, 20 g par image générée.</li>
+            <li><strong>Équivalences</strong> : avion ≈ 230 g CO<sub>2</sub>e/km-passager (moyen-courrier), voiture ≈ 193 g CO<sub>2</sub>e/km (moyenne du parc), bouteille plastique 0,5 L ≈ 83 g CO<sub>2</sub>e (fabrication), forêt rasée ≈ 40 kg CO<sub>2</sub>e/m² (ordre de grandeur GIEC/FAO pour la déforestation, 35 à 50 t/ha selon le type de forêt).</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Le profil de référence belge (~229 kg CO<sub>2</sub>e/an)</h2>
+        <div class="methodology-body">
+          <p>Ce repère, affiché sur la jauge et sur chaque barre de répartition, <strong>n'est pas une statistique nationale externe</strong>. Une première version comparait à un pourcentage du numérique dans les émissions belges (~2&nbsp;%, Digital Wallonia / Bruxelles Environnement) — mais ce périmètre couvre bien plus que ce que le quiz mesure (usages professionnels, stockage cloud, infrastructures…), ce qui rendait la comparaison trompeuse.</p>
+          <p>Il est donc <strong>calculé avec le même modèle et les mêmes huit catégories</strong> que les résultats des élèves, à partir d'un usage moyen plausible (smartphone milieu de gamme 4h/j, pas de console, TV 2h/j, streaming 7h/semaine en HD, 2h/semaine de visio, etc.) :</p>
+          <ul>
+            <li>Smartphone ≈ 29,7 kg</li>
+            <li>Tablette ≈ 29,3 kg</li>
+            <li>Ordinateur ≈ 58,0 kg</li>
+            <li>Objets connectés ≈ 9,0 kg</li>
+            <li>Console &amp; TV ≈ 55,7 kg</li>
+            <li>Streaming ≈ 25,5 kg</li>
+            <li>Visioconférence ≈ 15,6 kg</li>
+            <li>IA générative ≈ 6,5 kg</li>
+          </ul>
+          <p>C'est un point de comparaison cohérent avec ce que l'application mesure, pas une mesure officielle de l'empreinte numérique moyenne en Belgique. Le détail du calcul est documenté dans le code source (<code>shared.js</code>, à côté de <code>REFERENCE_MOYENNE_BE</code>).</p>
+        </div>
       </div>
     </div>
   </div>

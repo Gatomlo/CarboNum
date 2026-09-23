@@ -765,6 +765,7 @@
     manage: document.getElementById("tab-panel-manage"),
     share: document.getElementById("tab-panel-share"),
     account: document.getElementById("tab-panel-account"),
+    info: document.getElementById("tab-panel-info"),
   };
 
   function activateTab(name) {
