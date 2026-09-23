@@ -669,9 +669,14 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ---------------- mode projection ---------------- */
+/* Volontairement compact (visé : ~80 % de la hauteur d'une mise en page
+   "normale" à cartes) puisque cette vue est destinée à un projecteur —
+   toute la page doit tenir à l'écran sans défilement. Les overrides
+   ci-dessous ne touchent que .proj-body, pas les mêmes classes (.card,
+   .equiv-*, .bar-row...) réutilisées ailleurs (tableau de bord, calculateur). */
 
-.proj-body { font-size: 18px; }
-.proj-main { max-width: 1100px; margin: 0 auto; padding-block: 28px 40px; }
+.proj-body { font-size: 16px; }
+.proj-main { max-width: 1100px; margin: 0 auto; padding-block: 14px 20px; }
 
 .proj-header {
   display: flex;
@@ -679,26 +684,40 @@ input[type="range"]::-moz-range-thumb {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 26px;
+  margin-bottom: 14px;
 }
-.proj-title { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.6rem, 3.5vw, 2.2rem); }
-.proj-updated { color: var(--muted); font-size: .9rem; font-family: var(--font-mono); }
+.proj-title { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.3rem, 3vw, 1.8rem); }
+.proj-updated { color: var(--muted); font-size: .82rem; font-family: var(--font-mono); }
 
-.proj-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.proj-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
 .proj-stat-tile {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 22px 12px;
+  padding: 14px 10px;
   text-align: center;
 }
-.proj-stat-value { font-family: var(--font-mono); font-weight: 700; font-size: clamp(1.8rem, 5vw, 2.6rem); margin: 0; color: var(--accent); font-variant-numeric: tabular-nums; }
-.proj-stat-label { font-size: .95rem; color: var(--ink-2); margin: 6px 0 0; }
+.proj-stat-value { font-family: var(--font-mono); font-weight: 700; font-size: clamp(1.4rem, 4vw, 2rem); margin: 0; color: var(--accent); font-variant-numeric: tabular-nums; }
+.proj-stat-label { font-size: .82rem; color: var(--ink-2); margin: 4px 0 0; }
 
-.proj-panels { display: grid; grid-template-columns: 1fr 1.3fr; gap: 18px; align-items: start; margin-bottom: 18px; }
+.proj-panels { display: grid; grid-template-columns: 1fr 1.3fr; gap: 14px; align-items: start; margin-bottom: 14px; }
 .proj-gauge-card { text-align: center; }
-.proj-gauge { max-width: 380px; }
+.proj-gauge { max-width: 260px; }
+
+.proj-body .card { padding: 14px 16px; }
+.proj-body .card-title { font-size: 1rem; margin-bottom: 8px; }
+.proj-body .gauge-ref-label { font-size: .7rem; margin-top: 6px; }
+.proj-body .breakdown-chart { gap: 8px; }
+.proj-body .bar-row-label { font-size: .76rem; }
+.proj-body .bar-value { font-size: .72rem; }
+.proj-body .breakdown-legend { margin-top: 8px; font-size: .7rem; }
+.proj-body .equiv-grid { gap: 8px; }
+.proj-body .equiv-card { padding: 10px 6px; }
+.proj-body .equiv-card svg { width: 22px; height: 22px; margin-bottom: 4px; }
+.proj-body .equiv-value { font-size: 1rem; }
+.proj-body .equiv-label { font-size: .68rem; }
+.proj-body .equiv-sub { font-size: .62rem; min-height: 1.4em; margin-top: 3px; }
 
 @media (max-width: 720px) {
   .proj-stat-grid { grid-template-columns: repeat(2, 1fr); }
