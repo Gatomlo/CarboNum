@@ -405,6 +405,10 @@ input[type="range"]::-moz-range-thumb {
 
 .context-line { color: var(--ink-2); font-size: .95rem; max-width: 46ch; margin: 6px auto 0; }
 
+/* le résumé de portée du tableau de bord tient sur une seule ligne
+   plutôt que de se replier à 46ch comme les autres .context-line */
+#scope-summary { max-width: none; margin-left: 0; }
+
 .card {
   background: var(--surface);
   border: 1px solid var(--line);

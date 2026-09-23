@@ -99,6 +99,7 @@
   // -------------------------------------------------------------
 
   const startSection = document.getElementById("start-section");
+  const startBtn = document.getElementById("start-btn");
   const alreadyAnsweredNotice = document.getElementById("already-answered-notice");
   const alreadyAnsweredText = document.getElementById("already-answered-text");
   const answerAgainBtn = document.getElementById("answer-again-btn");
@@ -131,7 +132,15 @@
     } else {
       alreadyAnsweredNotice.hidden = true;
       startSection.hidden = false;
+      updateStartButtonLabel();
     }
+  }
+
+  // "Reprendre →" plutôt que "Commencer" quand une réponse en cours a
+  // été sauvegardée pour cette classe/pseudo (coupure pendant le quiz) —
+  // voir saveProgress()/loadProgress() plus bas.
+  function updateStartButtonLabel() {
+    startBtn.textContent = loadProgress() ? "Reprendre →" : "Commencer le calcul →";
   }
 
   // Vérifie l'état dès que classe + pseudo sont connus dès le chargement
@@ -323,7 +332,7 @@
     }
   });
 
-  document.getElementById("start-btn").addEventListener("click", async () => {
+  startBtn.addEventListener("click", async () => {
     if (!identityForm.hidden) {
       const classeVal = identityClasseField.hidden ? CLASSE : identityClasseInput.value.trim().slice(0, 60);
       const eleveVal = identityEleveField.hidden ? ELEVE : identityEleveInput.value.trim().slice(0, 60);

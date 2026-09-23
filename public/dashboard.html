@@ -81,7 +81,7 @@
     <div class="tabs no-print" id="dashboard-tabs" role="tablist">
       <button class="tab-btn is-active" id="tab-btn-stats" data-tab="stats" role="tab" aria-selected="true" aria-controls="tab-panel-stats" type="button">📊 Statistiques</button>
       <button class="tab-btn" id="tab-btn-compare" data-tab="compare" role="tab" aria-selected="false" aria-controls="tab-panel-compare" type="button">📈 Comparer</button>
-      <button class="tab-btn" id="tab-btn-manage" data-tab="manage" role="tab" aria-selected="false" aria-controls="tab-panel-manage" type="button">🧑‍🎓 Gérer la classe</button>
+      <button class="tab-btn" id="tab-btn-manage" data-tab="manage" role="tab" aria-selected="false" aria-controls="tab-panel-manage" type="button">🧑‍🎓 Classe</button>
       <button class="tab-btn" id="tab-btn-share" data-tab="share" role="tab" aria-selected="false" aria-controls="tab-panel-share" type="button">🔗 Partager</button>
       <button class="tab-btn" id="tab-btn-account" data-tab="account" role="tab" aria-selected="false" aria-controls="tab-panel-account" type="button">🔑 Compte</button>
       <button class="tab-btn" id="tab-btn-info" data-tab="info" role="tab" aria-selected="false" aria-controls="tab-panel-info" type="button">ℹ️ Méthodologie</button>
@@ -227,6 +227,11 @@
     </div>
 
     <div class="tab-panel" id="tab-panel-manage" role="tabpanel" aria-labelledby="tab-btn-manage" hidden>
+      <div id="manage-select-class-hint" class="empty-state">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 16v10M24 32h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <p>Choisis une classe précise dans le menu déroulant ci-dessus pour gérer sa politique de réponse et ses élèves.</p>
+      </div>
+
       <div class="card no-print" id="class-policy-card" hidden>
         <h2 class="card-title">Réponses multiples</h2>
         <p class="card-hint">Autorise ou non les élèves de cette classe à renvoyer une nouvelle réponse une fois qu'ils ont déjà répondu.</p>

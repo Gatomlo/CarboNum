@@ -50,12 +50,12 @@ Une fois connecté·e, le contenu du tableau de bord est réparti en six onglets
 
 - **📊 Statistiques** — nombre de réponses, empreinte minimale/maximale/moyenne du groupe, jauge, répartition par usage, et les mêmes équivalences concrètes que sur les résultats d'un·e élève (km en avion/voiture, bouteilles plastique, m² de forêt rasée — calculées ici sur la moyenne de la classe), avec impression et export CSV. **S'actualise automatiquement** (toutes les 10 secondes, comme le mode projection), avec l'heure de la dernière actualisation affichée sous le sélecteur de classe — pas besoin de recharger la page pendant que les élèves répondent.
 - **📈 Comparer** — coche les classes à inclure (toutes par défaut) pour voir leur moyenne comparée côte à côte, avec le nombre de réponses total et la moyenne combinée (pondérée par le nombre de réponses de chaque classe) de la sélection.
-- **🧑‍🎓 Gérer la classe** — politique de réponse (unique ou multiple, voir « Reprise après une coupure, et réponses multiples » ci-dessus) et déblocages, inclusion/exclusion des élèves de la classe affichée, et suppression définitive des données classe par classe (chaque classe a son propre bouton « Supprimer », avec confirmation en tapant le nom exact de la classe — plus de bouton unique dont la portée dépendait du sélecteur).
+- **🧑‍🎓 Classe** — politique de réponse (unique ou multiple, voir « Reprise après une coupure, et réponses multiples » ci-dessus) et déblocages, inclusion/exclusion des élèves de la classe affichée, et suppression définitive des données classe par classe (chaque classe a son propre bouton « Supprimer », avec confirmation en tapant le nom exact de la classe — plus de bouton unique dont la portée dépendait du sélecteur).
 - **🔗 Partager** — générateur de lien de classe et son QR code, avec un rappel de la syntaxe pour construire un lien à la main (`?classe=...`, `&eleve=...`).
 - **🔑 Compte** — changer le mot de passe.
 - **ℹ️ Méthodologie** — les mêmes coefficients, sources (ADEME, Arcep, GreenIT.fr, The Shift Project, Institut belge du Numérique Responsable, GIEC/FAO) et explication du profil de référence belge que la section « Méthodologie & sources » du calculateur, mais toujours visible (pas besoin qu'une classe ait déjà des réponses).
 
-Le sélecteur de classe et le mode projection restent au-dessus des onglets, puisqu'ils s'appliquent aux onglets Statistiques et Gérer la classe.
+Le sélecteur de classe et le mode projection restent au-dessus des onglets, puisqu'ils s'appliquent aux onglets Statistiques et Classe.
 
 #### Plusieurs classes en parallèle
 
@@ -76,7 +76,7 @@ Si un·e élève quitte la page en plein questionnaire (coupure réseau, onglet 
 
 S'il/elle a déjà **terminé et transmis** une réponse pour cette classe, un message « Tu as déjà répondu » s'affiche à la place du questionnaire. Par défaut, un bouton « Répondre à nouveau » permet quand même de la refaire (la nouvelle réponse remplace l'ancienne, comme avant) — mais l'enseignant·e peut restreindre ça classe par classe :
 
-- Dans l'onglet **« Gérer la classe »** du tableau de bord, la carte **« Réponses multiples »** permet de passer une classe en **« Une seule réponse par élève »** : au-delà de la première, une tentative est refusée (le message l'explique à l'élève) plutôt que de silencieusement écraser la précédente.
+- Dans l'onglet **« Classe »** du tableau de bord, la carte **« Réponses multiples »** permet de passer une classe en **« Une seule réponse par élève »** : au-delà de la première, une tentative est refusée (le message l'explique à l'élève) plutôt que de silencieusement écraser la précédente.
 - Sous cette politique, l'enseignant·e peut **débloquer à la volée** soit **toute la classe** (reste actif jusqu'à ce qu'il/elle le désactive — utile pour refaire l'exercice ensemble), soit **un·e élève en particulier** (à côté de son nom dans la liste de gestion — autorise une seule réponse de plus, puis se reverrouille automatiquement).
 
 Le tableau de bord (`dashboard.html`) propose un sélecteur pour :
@@ -84,7 +84,7 @@ Le tableau de bord (`dashboard.html`) propose un sélecteur pour :
 - afficher une **classe précise** (`dashboard.html?classe=5B`, ou via le menu déroulant) ;
 - ou afficher les **statistiques combinées de toutes les classes** ayant répondu (option par défaut « Toutes les classes »).
 
-Une classe apparue une fois dans ce sélecteur n'en disparaît **jamais** d'elle-même (même si tous ses élèves sont exclus, voir ci-dessous, ou en cas de coupure réseau passagère) — seule une suppression explicite de cette classe (onglet « Gérer la classe », bouton « Supprimer » propre à chaque classe) la retire définitivement, elle et ses élèves.
+Une classe apparue une fois dans ce sélecteur n'en disparaît **jamais** d'elle-même (même si tous ses élèves sont exclus, voir ci-dessous, ou en cas de coupure réseau passagère) — seule une suppression explicite de cette classe (onglet « Classe », bouton « Supprimer » propre à chaque classe) la retire définitivement, elle et ses élèves.
 
 #### Exclure un·e élève des statistiques
 

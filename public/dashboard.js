@@ -503,6 +503,7 @@
   // ---- Politique de réponse d'une classe (unique ou multiple) et
   // déblocages (classe entière ou élève par élève) ----
 
+  const manageSelectClassHint = document.getElementById("manage-select-class-hint");
   const classPolicyCard = document.getElementById("class-policy-card");
   const classPolicyClasseName = document.getElementById("class-policy-classe-name");
   const classPolicySelect = document.getElementById("class-policy-select");
@@ -512,6 +513,7 @@
   let currentClassSettings = null;
 
   async function loadClassSettings(classe) {
+    manageSelectClassHint.hidden = !!classe;
     if (!classe) {
       classPolicyCard.hidden = true;
       currentClassSettings = null;
