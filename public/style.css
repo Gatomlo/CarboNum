@@ -574,6 +574,22 @@ input[type="range"]::-moz-range-thumb {
 
 .card-hint { font-size: .85rem; color: var(--ink-2); margin: -6px 0 16px; }
 
+.policy-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: .88rem;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  margin: 0 0 18px;
+}
+.policy-status .status-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--muted); }
+.policy-status.is-multiple .status-dot { background: var(--good); }
+.policy-status.is-single .status-dot { background: var(--crit); }
+.policy-status.is-unlocked .status-dot { background: var(--warn); }
+
 .card code {
   background: var(--surface-2);
   padding: 1px 6px;

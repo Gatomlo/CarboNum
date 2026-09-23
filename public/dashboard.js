@@ -460,8 +460,27 @@
   const classPolicySelect = document.getElementById("class-policy-select");
   const unlockAllRow = document.getElementById("unlock-all-row");
   const unlockAllCheckbox = document.getElementById("unlock-all-checkbox");
+  const policyStatus = document.getElementById("policy-status");
+  const policyStatusText = document.getElementById("policy-status-text");
 
   let currentClassSettings = null;
+
+  // Statut affiché en toutes lettres au-dessus du sélecteur, plutôt que de
+  // laisser deviner la politique en cours à partir de la seule valeur du
+  // menu déroulant (peu visible au premier coup d'œil).
+  function renderPolicyStatus(settings) {
+    policyStatus.classList.remove("is-multiple", "is-single", "is-unlocked");
+    if (settings.policy === "multiple") {
+      policyStatus.classList.add("is-multiple");
+      policyStatusText.textContent = "Réponses multiples autorisées — une nouvelle réponse remplace la précédente.";
+    } else if (settings.unlockedAll) {
+      policyStatus.classList.add("is-unlocked");
+      policyStatusText.textContent = "Réponse unique, mais classe débloquée temporairement — tout le monde peut renvoyer une réponse.";
+    } else {
+      policyStatus.classList.add("is-single");
+      policyStatusText.textContent = "Une seule réponse par élève — toute tentative supplémentaire est refusée.";
+    }
+  }
 
   async function loadClassSettings(classe) {
     manageSelectClassHint.hidden = !!classe;
@@ -485,6 +504,7 @@
     classPolicySelect.value = currentClassSettings.policy;
     unlockAllRow.hidden = currentClassSettings.policy !== "single";
     unlockAllCheckbox.checked = currentClassSettings.unlockedAll;
+    renderPolicyStatus(currentClassSettings);
   }
 
   classPolicySelect.addEventListener("change", async () => {
