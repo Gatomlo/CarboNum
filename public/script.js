@@ -88,6 +88,138 @@
   }
 
   // -------------------------------------------------------------
+  // Déjà répondu ? Reprise d'une réponse en cours ?
+  // Avant de (re)lancer le quiz, on vérifie côté serveur si ce pseudo a
+  // déjà une réponse enregistrée pour cette classe, et si une nouvelle
+  // réponse est autorisée (politique de la classe, ou déblocage ponctuel
+  // par l'enseignant·e — voir /api/submission-status et /api/submit dans
+  // server.js, qui fait réellement respecter la règle). En hébergement
+  // statique (sans serveur), la requête échoue simplement et on laisse
+  // passer comme avant : rien à vérifier dans ce mode.
+  // -------------------------------------------------------------
+
+  const startSection = document.getElementById("start-section");
+  const alreadyAnsweredNotice = document.getElementById("already-answered-notice");
+  const alreadyAnsweredText = document.getElementById("already-answered-text");
+  const answerAgainBtn = document.getElementById("answer-again-btn");
+
+  let entryStatus = null;
+
+  async function checkEntryStatus() {
+    if (!CLASSE || !ELEVE) {
+      entryStatus = null;
+      updateHeroForEntryStatus();
+      return;
+    }
+    try {
+      const res = await fetch(`api/submission-status?classe=${encodeURIComponent(CLASSE)}&eleve=${encodeURIComponent(ELEVE)}`);
+      entryStatus = res.ok ? await res.json() : null;
+    } catch (e) {
+      entryStatus = null;
+    }
+    updateHeroForEntryStatus();
+  }
+
+  function updateHeroForEntryStatus() {
+    if (entryStatus && entryStatus.submitted) {
+      startSection.hidden = true;
+      alreadyAnsweredNotice.hidden = false;
+      answerAgainBtn.hidden = !!entryStatus.locked;
+      alreadyAnsweredText.textContent = entryStatus.locked
+        ? "Tu as déjà répondu pour cette classe. Si tu dois modifier ta réponse, demande à ton enseignant·e de te débloquer."
+        : "Tu as déjà répondu pour cette classe. Tu peux répondre à nouveau si besoin — ta réponse précédente sera remplacée.";
+    } else {
+      alreadyAnsweredNotice.hidden = true;
+      startSection.hidden = false;
+    }
+  }
+
+  // Vérifie l'état dès que classe + pseudo sont connus dès le chargement
+  // (lien avec les deux paramètres, ou identité mémorisée) — pas besoin
+  // d'attendre un clic pour savoir si "Commencer" doit être proposé.
+  if (CLASSE && ELEVE) checkEntryStatus();
+
+  answerAgainBtn.addEventListener("click", () => {
+    clearProgress();
+    alreadyAnsweredNotice.hidden = true;
+    currentStep = 0;
+    renderStep();
+    showScreen("wizard");
+  });
+
+  // ---- Réponse en cours (reprise après une coupure) ----
+  // Sauvegardée à chaque changement d'étape, sous une clé propre à la
+  // paire classe/pseudo, pour ne jamais mélanger la progression de deux
+  // élèves partageant le même navigateur (salle informatique...).
+
+  function progressKey(classe, eleve) {
+    return `empreinte-progress-${classe}::${eleve}`;
+  }
+
+  function saveProgress() {
+    if (!CLASSE || !ELEVE) return;
+    try {
+      const fields = {};
+      document.querySelectorAll("#wizard-form input, #wizard-form select").forEach((el) => {
+        if (el.type === "radio") {
+          if (el.checked) fields[el.name] = el.value;
+        } else if (el.type === "checkbox") {
+          fields[el.id] = el.checked;
+        } else if (el.id) {
+          fields[el.id] = el.value;
+        }
+      });
+      sessionStorage.setItem(progressKey(CLASSE, ELEVE), JSON.stringify({ step: currentStep, fields }));
+    } catch (e) {
+      /* stockage indisponible : pas bloquant, juste pas de reprise possible */
+    }
+  }
+
+  function loadProgress() {
+    if (!CLASSE || !ELEVE) return null;
+    try {
+      const raw = sessionStorage.getItem(progressKey(CLASSE, ELEVE));
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function clearProgress() {
+    if (!CLASSE || !ELEVE) return;
+    try {
+      sessionStorage.removeItem(progressKey(CLASSE, ELEVE));
+    } catch (e) {
+      /* pas bloquant */
+    }
+  }
+
+  function restoreProgress(saved) {
+    Object.entries(saved.fields || {}).forEach(([key, value]) => {
+      const el = document.getElementById(key);
+      if (el) {
+        if (el.type === "checkbox") el.checked = !!value;
+        else el.value = value;
+        el.dispatchEvent(new Event("input"));
+        el.dispatchEvent(new Event("change"));
+      } else {
+        document.querySelectorAll(`#wizard-form input[type="radio"][name="${key}"]`).forEach((r) => {
+          r.checked = r.value === value;
+        });
+      }
+    });
+    currentStep = Math.min(Math.max(saved.step || 0, 0), steps.length - 1);
+  }
+
+  function proceedToWizard() {
+    const saved = loadProgress();
+    if (saved) restoreProgress(saved);
+    else currentStep = 0;
+    renderStep();
+    showScreen("wizard");
+  }
+
+  // -------------------------------------------------------------
   // Facteurs d'émission (ordres de grandeur pédagogiques)
   // Sources : ADEME (Base Carbone, étude "Évaluation environnementale
   // des impacts du numérique en France", 2022), Arcep, GreenIT.fr,
@@ -176,6 +308,7 @@
     if (currentStep > 0) {
       currentStep -= 1;
       renderStep();
+      saveProgress();
     }
   });
 
@@ -183,13 +316,14 @@
     if (currentStep < steps.length - 1) {
       currentStep += 1;
       renderStep();
+      saveProgress();
     } else {
       computeAndRenderResults();
       showScreen("results");
     }
   });
 
-  document.getElementById("start-btn").addEventListener("click", () => {
+  document.getElementById("start-btn").addEventListener("click", async () => {
     if (!identityForm.hidden) {
       const classeVal = identityClasseField.hidden ? CLASSE : identityClasseInput.value.trim().slice(0, 60);
       const eleveVal = identityEleveField.hidden ? ELEVE : identityEleveInput.value.trim().slice(0, 60);
@@ -210,15 +344,16 @@
       showBadge();
     }
 
-    currentStep = 0;
-    renderStep();
-    showScreen("wizard");
+    await checkEntryStatus();
+    if (entryStatus && entryStatus.submitted) return; // le clic a révélé l'avis "déjà répondu" à la place
+    proceedToWizard();
   });
 
   document.getElementById("restart-btn").addEventListener("click", () => {
     currentStep = 0;
     renderStep();
     showScreen("hero");
+    checkEntryStatus(); // reflète le "déjà répondu" si une réponse vient d'être transmise
   });
 
   document.getElementById("print-btn").addEventListener("click", () => {
@@ -530,8 +665,17 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("bad status");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // Cas le plus probable : la classe est passée en "une seule
+        // réponse" et ce pseudo n'est pas débloqué. On garde la
+        // réponse en cours (pas de clearProgress) au cas où l'élève
+        // serait débloqué entre-temps et retente plus tard.
+        shareStatus.textContent = data.error || "Résultat non transmis : le serveur de classe n'est pas accessible.";
+        return;
+      }
       shareStatus.textContent = "✓ Résultat transmis à ton enseignant·e.";
+      clearProgress();
     } catch (e) {
       shareStatus.textContent = "Résultat non transmis : le serveur de classe n'est pas accessible.";
     }

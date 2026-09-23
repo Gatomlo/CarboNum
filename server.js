@@ -252,9 +252,54 @@ app.post("/api/submit", (req, res) => {
   const eleve = sanitizeLabel(body.eleve);
 
   // Avec classe + élève renseignés, une nouvelle réponse remplace la
-  // précédente du même élève (upsert) plutôt que de créer un doublon.
+  // précédente du même élève (upsert) plutôt que de créer un doublon —
+  // sauf si la classe est en politique "une seule réponse" et que cet
+  // élève n'a pas été débloqué (voir getClassSettings dans db.js). Le
+  // client (script.js) vérifie déjà ça avant de lancer le quiz, mais
+  // c'est ici, côté serveur, que c'est réellement fait respecter.
+  if (classe && eleve) {
+    const existing = db.findSubmission(classe, eleve);
+    if (existing) {
+      const settings = db.getClassSettings(classe);
+      const unlocked = settings.unlockedAll || settings.unlockedStudents.includes(eleve);
+      if (settings.policy === "single" && !unlocked) {
+        return res.status(403).json({
+          error: "Une réponse a déjà été enregistrée pour ce pseudo dans cette classe. Demande à ton enseignant·e de te débloquer si tu dois la refaire.",
+        });
+      }
+      // Déblocage individuel à usage unique : consommé dès qu'il sert,
+      // pour ne pas avoir à re-verrouiller manuellement après coup.
+      // Le déblocage "toute la classe" n'est lui jamais consommé tout
+      // seul — l'enseignant·e le désactive explicitement.
+      if (!settings.unlockedAll && settings.unlockedStudents.includes(eleve)) {
+        db.consumeStudentUnlock(classe, eleve);
+      }
+    }
+  }
+
   db.upsertSubmission({ created_at: new Date().toISOString(), classe, eleve, total: body.total, ...values });
   res.json({ ok: true });
+});
+
+// Permet à l'élève de savoir, avant de commencer le quiz, s'il a déjà
+// répondu pour cette classe et ce pseudo, et si une nouvelle réponse
+// est actuellement autorisée — pour proposer de reprendre/refaire au
+// lieu de laisser une tentative échouer silencieusement à la fin.
+// Publique comme /api/submit : classe + pseudo sont déjà contrôlés par
+// l'élève lui-même via son lien, ce n'est pas une donnée à protéger.
+app.get("/api/submission-status", (req, res) => {
+  const classe = sanitizeLabel(req.query.classe || "");
+  const eleve = sanitizeLabel(req.query.eleve || "");
+  if (!classe || !eleve) {
+    return res.json({ submitted: false, locked: false });
+  }
+  const existing = db.findSubmission(classe, eleve);
+  if (!existing) {
+    return res.json({ submitted: false, locked: false });
+  }
+  const settings = db.getClassSettings(classe);
+  const unlocked = settings.unlockedAll || settings.unlockedStudents.includes(eleve);
+  res.json({ submitted: true, locked: settings.policy === "single" && !unlocked });
 });
 
 // À partir d'ici, toutes les routes exposent des données de classe :
@@ -276,6 +321,49 @@ app.get("/api/classes", requireAdmin, (req, res) => {
     .sort((a, b) => a.localeCompare(b, "fr", { sensitivity: "base" }))
     .map((classe) => ({ classe, count: countByClasse[classe] }));
   res.json({ classes });
+});
+
+// Politique de réponse d'une classe ("multiple", par défaut — une
+// nouvelle réponse remplace toujours la précédente — ou "single", une
+// seule réponse par élève sauf déblocage) et son état de déblocage.
+app.get("/api/class-settings", requireAdmin, (req, res) => {
+  const classe = sanitizeLabel(req.query.classe || "");
+  if (!classe) {
+    return res.status(400).json({ error: "paramètre classe requis" });
+  }
+  res.json(db.getClassSettings(classe));
+});
+
+app.post("/api/class-settings/policy", requireAdmin, (req, res) => {
+  const classe = sanitizeLabel(req.body && req.body.classe);
+  const policy = req.body && req.body.policy;
+  if (!classe || (policy !== "single" && policy !== "multiple")) {
+    return res.status(400).json({ error: "paramètres invalides" });
+  }
+  db.setClassPolicy(classe, policy);
+  res.json({ ok: true });
+});
+
+// Débloque (ou reverrouille) toute la classe d'un coup — reste actif
+// jusqu'à ce que l'enseignant·e le désactive explicitement, contrairement
+// au déblocage par élève ci-dessous, à usage unique.
+app.post("/api/class-settings/unlock-all", requireAdmin, (req, res) => {
+  const classe = sanitizeLabel(req.body && req.body.classe);
+  if (!classe) {
+    return res.status(400).json({ error: "paramètre classe requis" });
+  }
+  db.setClassUnlockedAll(classe, !!(req.body && req.body.unlocked));
+  res.json({ ok: true });
+});
+
+app.post("/api/class-settings/unlock-student", requireAdmin, (req, res) => {
+  const classe = sanitizeLabel(req.body && req.body.classe);
+  const eleve = sanitizeLabel(req.body && req.body.eleve);
+  if (!classe || !eleve) {
+    return res.status(400).json({ error: "paramètres classe et eleve requis" });
+  }
+  db.setStudentUnlocked(classe, eleve, !!(req.body && req.body.unlocked));
+  res.json({ ok: true });
 });
 
 // ?classe=... limite aux réponses de cette classe ; sans paramètre,

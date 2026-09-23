@@ -50,7 +50,7 @@ Une fois connecté·e, le contenu du tableau de bord est réparti en six onglets
 
 - **📊 Statistiques** — nombre de réponses, empreinte minimale/maximale/moyenne du groupe, jauge, répartition par usage, et les mêmes équivalences concrètes que sur les résultats d'un·e élève (km en avion/voiture, bouteilles plastique, m² de forêt rasée — calculées ici sur la moyenne de la classe), avec impression et export CSV. **S'actualise automatiquement** (toutes les 10 secondes, comme le mode projection), avec l'heure de la dernière actualisation affichée sous le sélecteur de classe — pas besoin de recharger la page pendant que les élèves répondent.
 - **📈 Comparer** — coche les classes à inclure (toutes par défaut) pour voir leur moyenne comparée côte à côte, avec le nombre de réponses total et la moyenne combinée (pondérée par le nombre de réponses de chaque classe) de la sélection.
-- **🧑‍🎓 Gérer la classe** — inclusion/exclusion des élèves de la classe affichée, et suppression définitive des données classe par classe (chaque classe a son propre bouton « Supprimer », qui efface ses réponses et les élèves associés — plus de bouton unique dont la portée dépendait du sélecteur).
+- **🧑‍🎓 Gérer la classe** — politique de réponse (unique ou multiple, voir « Reprise après une coupure, et réponses multiples » ci-dessus) et déblocages, inclusion/exclusion des élèves de la classe affichée, et suppression définitive des données classe par classe (chaque classe a son propre bouton « Supprimer », avec confirmation en tapant le nom exact de la classe — plus de bouton unique dont la portée dépendait du sélecteur).
 - **🔗 Partager** — générateur de lien de classe et son QR code, avec un rappel de la syntaxe pour construire un lien à la main (`?classe=...`, `&eleve=...`).
 - **🔑 Compte** — changer le mot de passe.
 - **ℹ️ Méthodologie** — les mêmes coefficients, sources (ADEME, Arcep, GreenIT.fr, The Shift Project, Institut belge du Numérique Responsable, GIEC/FAO) et explication du profil de référence belge que la section « Méthodologie & sources » du calculateur, mais toujours visible (pas besoin qu'une classe ait déjà des réponses).
@@ -69,6 +69,15 @@ http://localhost:3000/?classe=5B&eleve=12
 - `eleve` (ou `id`) — un identifiant au choix (numéro de rang, pseudo…), utilisé uniquement pour qu'une nouvelle réponse du même élève **remplace** la précédente au lieu de la dupliquer. Ce n'est pas un nom et il n'est affiché nulle part dans les statistiques.
 
 **Pour tout ce que l'URL ne donne pas**, l'élève arrive sur un petit formulaire qui l'invite à le compléter avant de commencer — uniquement les champs manquants (obligatoires pour continuer) : un lien `?classe=5B` seul (le cas le plus courant — un même lien donné à toute la classe) ne redemande que le pseudo, pas le code de classe déjà connu. Sans aucun paramètre, les deux sont demandés. Une fois saisie, l'information est mémorisée pour la session du navigateur (elle n'est pas redemandée si l'élève recharge la page avec le même lien — mais un pseudo mémorisé pour une classe n'est jamais réutilisé pour une autre, si l'élève ouvre un lien différent dans le même navigateur) et un badge en haut de page confirme le contexte dans lequel il répond.
+
+#### Reprise après une coupure, et réponses multiples
+
+Si un·e élève quitte la page en plein questionnaire (coupure réseau, onglet fermé par erreur…) et revient avec le même lien (même classe + même pseudo), il/elle **reprend automatiquement à l'étape où il/elle s'était arrêté·e**, avec les réponses déjà données conservées — la progression est mémorisée dans le navigateur au fil des étapes, jamais envoyée au serveur.
+
+S'il/elle a déjà **terminé et transmis** une réponse pour cette classe, un message « Tu as déjà répondu » s'affiche à la place du questionnaire. Par défaut, un bouton « Répondre à nouveau » permet quand même de la refaire (la nouvelle réponse remplace l'ancienne, comme avant) — mais l'enseignant·e peut restreindre ça classe par classe :
+
+- Dans l'onglet **« Gérer la classe »** du tableau de bord, la carte **« Réponses multiples »** permet de passer une classe en **« Une seule réponse par élève »** : au-delà de la première, une tentative est refusée (le message l'explique à l'élève) plutôt que de silencieusement écraser la précédente.
+- Sous cette politique, l'enseignant·e peut **débloquer à la volée** soit **toute la classe** (reste actif jusqu'à ce qu'il/elle le désactive — utile pour refaire l'exercice ensemble), soit **un·e élève en particulier** (à côté de son nom dans la liste de gestion — autorise une seule réponse de plus, puis se reverrouille automatiquement).
 
 Le tableau de bord (`dashboard.html`) propose un sélecteur pour :
 

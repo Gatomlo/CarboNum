@@ -59,6 +59,10 @@ function getAll() {
   return state.submissions;
 }
 
+function findSubmission(classe, eleve) {
+  return state.submissions.find((s) => s.classe === classe && s.eleve === eleve) || null;
+}
+
 function setIncluded(id, included) {
   const row = state.submissions.find((s) => s.id === id);
   if (!row) return false;
@@ -69,12 +73,69 @@ function setIncluded(id, included) {
 
 function deleteByClasse(classe) {
   state.submissions = state.submissions.filter((s) => s.classe !== classe);
+  if (state.classSettings) delete state.classSettings[classe];
   save();
 }
 
 function deleteAll() {
   state.submissions = [];
   save();
+}
+
+// Politique de réponse d'une classe : "multiple" (défaut — remplace le
+// comportement historique, une nouvelle réponse écrase toujours la
+// précédente) ou "single" (une seule réponse par élève, sauf
+// déblocage explicite). unlockedAll est un interrupteur classe entière
+// qui reste actif jusqu'à ce que l'enseignant·e le désactive à nouveau
+// (utile pour "on refait l'exercice ensemble aujourd'hui") ;
+// unlockedStudents est une autorisation à usage unique par élève,
+// consommée automatiquement dès que cet élève renvoie une réponse
+// (voir consumeStudentUnlock, appelé depuis /api/submit).
+function getClassSettings(classe) {
+  const s = state.classSettings && state.classSettings[classe];
+  return {
+    policy: (s && s.policy) || "multiple",
+    unlockedAll: !!(s && s.unlockedAll),
+    unlockedStudents: (s && s.unlockedStudents) || [],
+  };
+}
+
+function ensureClassSettings(classe) {
+  if (!state.classSettings) state.classSettings = {};
+  if (!state.classSettings[classe]) {
+    state.classSettings[classe] = { policy: "multiple", unlockedAll: false, unlockedStudents: [] };
+  }
+  return state.classSettings[classe];
+}
+
+function setClassPolicy(classe, policy) {
+  const s = ensureClassSettings(classe);
+  s.policy = policy === "single" ? "single" : "multiple";
+  save();
+}
+
+function setClassUnlockedAll(classe, unlocked) {
+  const s = ensureClassSettings(classe);
+  s.unlockedAll = !!unlocked;
+  save();
+}
+
+function setStudentUnlocked(classe, eleve, unlocked) {
+  const s = ensureClassSettings(classe);
+  const idx = s.unlockedStudents.indexOf(eleve);
+  if (unlocked && idx === -1) s.unlockedStudents.push(eleve);
+  if (!unlocked && idx !== -1) s.unlockedStudents.splice(idx, 1);
+  save();
+}
+
+function consumeStudentUnlock(classe, eleve) {
+  const s = state.classSettings && state.classSettings[classe];
+  if (!s) return;
+  const idx = s.unlockedStudents.indexOf(eleve);
+  if (idx !== -1) {
+    s.unlockedStudents.splice(idx, 1);
+    save();
+  }
 }
 
 // Mot de passe administrateur (haché, voir password-hash.js), stocké ici
@@ -96,9 +157,15 @@ function setAdminPasswordHash(hash) {
 module.exports = {
   upsertSubmission,
   getAll,
+  findSubmission,
   setIncluded,
   deleteByClasse,
   deleteAll,
   getAdminPasswordHash,
   setAdminPasswordHash,
+  getClassSettings,
+  setClassPolicy,
+  setClassUnlockedAll,
+  setStudentUnlocked,
+  consumeStudentUnlock,
 };

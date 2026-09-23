@@ -227,9 +227,25 @@
     </div>
 
     <div class="tab-panel" id="tab-panel-manage" role="tabpanel" aria-labelledby="tab-btn-manage" hidden>
+      <div class="card no-print" id="class-policy-card" hidden>
+        <h2 class="card-title">Réponses multiples</h2>
+        <p class="card-hint">Autorise ou non les élèves de cette classe à renvoyer une nouvelle réponse une fois qu'ils ont déjà répondu.</p>
+        <label class="field class-select-field">
+          <span>Politique pour « <span id="class-policy-classe-name"></span> »</span>
+          <select id="class-policy-select">
+            <option value="multiple">Réponses multiples autorisées</option>
+            <option value="single">Une seule réponse par élève</option>
+          </select>
+        </label>
+        <label class="check-row" id="unlock-all-row" hidden>
+          <input type="checkbox" id="unlock-all-checkbox">
+          Débloquer temporairement toute la classe (autorise tout le monde à renvoyer une réponse, jusqu'à ce que tu redécoches)
+        </label>
+      </div>
+
       <div class="card" id="manage-card" hidden>
         <h2 class="card-title">Gérer les élèves de cette classe</h2>
-        <p class="card-hint">Décoche un·e élève pour exclure sa réponse du calcul des statistiques (utile pour un test ou une réponse manifestement erronée). Son entrée reste enregistrée, juste ignorée dans les chiffres ci-dessus.</p>
+        <p class="card-hint">Décoche un·e élève pour exclure sa réponse du calcul des statistiques (utile pour un test ou une réponse manifestement erronée). Son entrée reste enregistrée, juste ignorée dans les chiffres ci-dessus. Quand la classe est en politique « une seule réponse », un bouton permet aussi de débloquer un·e élève en particulier pour qu'il/elle puisse renvoyer une réponse.</p>
         <div id="manage-list" class="manage-list"></div>
       </div>
 

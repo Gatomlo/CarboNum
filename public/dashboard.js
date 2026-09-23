@@ -500,6 +500,85 @@
     return entries[0];
   }
 
+  // ---- Politique de réponse d'une classe (unique ou multiple) et
+  // déblocages (classe entière ou élève par élève) ----
+
+  const classPolicyCard = document.getElementById("class-policy-card");
+  const classPolicyClasseName = document.getElementById("class-policy-classe-name");
+  const classPolicySelect = document.getElementById("class-policy-select");
+  const unlockAllRow = document.getElementById("unlock-all-row");
+  const unlockAllCheckbox = document.getElementById("unlock-all-checkbox");
+
+  let currentClassSettings = null;
+
+  async function loadClassSettings(classe) {
+    if (!classe) {
+      classPolicyCard.hidden = true;
+      currentClassSettings = null;
+      return;
+    }
+    try {
+      const res = await fetch(`api/class-settings?classe=${encodeURIComponent(classe)}`);
+      if (redirectToLoginIfUnauthorized(res)) return;
+      if (!res.ok) throw new Error("bad status");
+      currentClassSettings = await res.json();
+    } catch (e) {
+      classPolicyCard.hidden = true;
+      currentClassSettings = null;
+      return;
+    }
+    classPolicyCard.hidden = false;
+    classPolicyClasseName.textContent = classe;
+    classPolicySelect.value = currentClassSettings.policy;
+    unlockAllRow.hidden = currentClassSettings.policy !== "single";
+    unlockAllCheckbox.checked = currentClassSettings.unlockedAll;
+  }
+
+  classPolicySelect.addEventListener("change", async () => {
+    const classe = currentClasse();
+    if (!classe) return;
+    const policy = classPolicySelect.value;
+    classPolicySelect.disabled = true;
+    try {
+      const res = await fetch("api/class-settings/policy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ classe, policy }),
+      });
+      if (redirectToLoginIfUnauthorized(res)) return;
+      if (!res.ok) throw new Error("bad status");
+      await loadClassSettings(classe);
+      loadManageList(classe); // rafraîchit les boutons de déblocage par élève
+    } catch (e) {
+      alert("Impossible de mettre à jour la politique de cette classe (serveur inaccessible).");
+    } finally {
+      classPolicySelect.disabled = false;
+    }
+  });
+
+  unlockAllCheckbox.addEventListener("change", async () => {
+    const classe = currentClasse();
+    if (!classe) return;
+    const wanted = unlockAllCheckbox.checked;
+    unlockAllCheckbox.disabled = true;
+    try {
+      const res = await fetch("api/class-settings/unlock-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ classe, unlocked: wanted }),
+      });
+      if (redirectToLoginIfUnauthorized(res)) return;
+      if (!res.ok) throw new Error("bad status");
+      await loadClassSettings(classe);
+      loadManageList(classe);
+    } catch (e) {
+      unlockAllCheckbox.checked = !wanted;
+      alert("Impossible de mettre à jour le déblocage (serveur inaccessible).");
+    } finally {
+      unlockAllCheckbox.disabled = false;
+    }
+  });
+
   // ---- Gestion des élèves d'une classe (inclusion/exclusion) ----
 
   async function loadManageList(classe) {
@@ -558,6 +637,40 @@
       total.textContent = `${fmt(s.total, 0)} kg`;
 
       row.append(checkbox, pseudo, total);
+
+      // Bouton de déblocage individuel : seulement utile en politique
+      // "une seule réponse", tant que la classe entière n'est pas déjà
+      // débloquée globalement, et seulement pour un pseudo identifiable.
+      if (s.eleve && currentClassSettings && currentClassSettings.policy === "single" && !currentClassSettings.unlockedAll) {
+        const isUnlocked = currentClassSettings.unlockedStudents.includes(s.eleve);
+        const unlockBtn = document.createElement("button");
+        unlockBtn.type = "button";
+        unlockBtn.className = "btn btn-ghost btn-sm";
+        unlockBtn.textContent = isUnlocked ? "🔓 Débloqué" : "🔒 Débloquer";
+        unlockBtn.addEventListener("click", async (e) => {
+          // Le bouton est dans un <label> lié à la case d'inclusion :
+          // sans ça, le clic ferait aussi basculer la case.
+          e.preventDefault();
+          e.stopPropagation();
+          unlockBtn.disabled = true;
+          try {
+            const res = await fetch("api/class-settings/unlock-student", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ classe, eleve: s.eleve, unlocked: !isUnlocked }),
+            });
+            if (redirectToLoginIfUnauthorized(res)) return;
+            if (!res.ok) throw new Error("bad status");
+            await loadClassSettings(classe);
+            loadManageList(classe);
+          } catch (e2) {
+            alert("Impossible de mettre à jour le déblocage (serveur inaccessible).");
+            unlockBtn.disabled = false;
+          }
+        });
+        row.append(unlockBtn);
+      }
+
       manageList.appendChild(row);
     });
 
@@ -654,6 +767,7 @@
       );
     }
 
+    await loadClassSettings(classe);
     const { excludedCount } = await loadManageList(classe);
     if (excludedCount > 0) {
       scopeSummary.textContent += ` (${excludedCount} exclu${excludedCount > 1 ? "s" : ""} de la classe)`;
@@ -695,7 +809,14 @@
       delBtn.type = "button";
       delBtn.textContent = "🗑️ Supprimer";
       delBtn.addEventListener("click", async () => {
-        if (!confirm(`Supprimer définitivement les données de la classe « ${c.classe} » et tous les élèves associés ? Cette action est irréversible.`)) return;
+        // Confirmation renforcée (taper le nom de la classe) plutôt qu'un
+        // simple OK/Annuler, vu le caractère irréversible de l'action.
+        const typed = prompt(`Pour confirmer la suppression définitive de la classe « ${c.classe} » et de tous les élèves associés, tape exactement son nom ci-dessous :`);
+        if (typed === null) return; // annulé
+        if (typed !== c.classe) {
+          alert("Le nom saisi ne correspond pas — suppression annulée.");
+          return;
+        }
         delBtn.disabled = true;
         try {
           const res = await fetch(`api/submissions?classe=${encodeURIComponent(c.classe)}`, { method: "DELETE" });
