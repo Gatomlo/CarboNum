@@ -491,8 +491,10 @@ input[type="range"]::-moz-range-thumb {
 .results-actions { display: flex; gap: 10px; }
 .results-actions .btn { flex: 1; }
 
-.report-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.report-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .report-actions .btn { flex: 1; }
+
+#stats-cards { display: flex; flex-direction: column; gap: 18px; }
 
 /* identité imprimée : invisible à l'écran (déjà affichée via le badge de
    contexte sur l'écran d'accueil), visible seulement sur la version
