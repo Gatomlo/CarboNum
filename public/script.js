@@ -42,14 +42,19 @@
     }
   }
 
-  if (!CLASSE && !ELEVE) {
-    const stored = readStoredIdentity();
-    CLASSE = stored.classe;
-    ELEVE = stored.eleve;
-  }
+  // Complète depuis la session ce que l'URL ne donne pas — mais ne
+  // réutilise un pseudo mémorisé que s'il correspond à la même classe
+  // (sinon le pseudo d'une classe précédente se retrouverait appliqué à
+  // une autre, ouverte via un nouveau lien dans le même navigateur).
+  const stored = readStoredIdentity();
+  if (!CLASSE) CLASSE = stored.classe;
+  if (!ELEVE && stored.classe === CLASSE) ELEVE = stored.eleve;
 
   const contextBadge = document.getElementById("context-badge");
   const identityForm = document.getElementById("identity-form");
+  const identityIntro = document.getElementById("identity-intro");
+  const identityClasseField = document.getElementById("identity-classe-field");
+  const identityEleveField = document.getElementById("identity-eleve-field");
   const identityClasseInput = document.getElementById("identity-classe");
   const identityEleveInput = document.getElementById("identity-eleve");
   const identityError = document.getElementById("identity-error");
@@ -62,10 +67,24 @@
     contextBadge.hidden = false;
   }
 
-  if (CLASSE || ELEVE) {
+  // N'affiche le formulaire que pour ce qui manque réellement : un lien
+  // ne donnant que ?classe=... (sans pseudo par élève) doit quand même
+  // demander un pseudo, sinon toutes les réponses de la classe se
+  // retrouvent sans pseudo dans le tableau de bord — jamais tout
+  // redemander si l'un des deux est déjà connu (URL ou session).
+  if (CLASSE && ELEVE) {
     showBadge();
   } else {
     identityForm.hidden = false;
+    identityClasseField.hidden = !!CLASSE;
+    identityEleveField.hidden = !!ELEVE;
+    if (!CLASSE && !ELEVE) {
+      identityIntro.textContent = "Pour rejoindre ta classe, indique le code donné par ton enseignant·e et choisis un pseudo (pas ton vrai nom).";
+    } else if (CLASSE) {
+      identityIntro.textContent = `Pour rejoindre la classe ${CLASSE}, choisis un pseudo (pas ton vrai nom).`;
+    } else {
+      identityIntro.textContent = "Indique le code donné par ton enseignant·e pour continuer.";
+    }
   }
 
   // -------------------------------------------------------------
@@ -172,10 +191,14 @@
 
   document.getElementById("start-btn").addEventListener("click", () => {
     if (!identityForm.hidden) {
-      const classeVal = identityClasseInput.value.trim().slice(0, 60);
-      const eleveVal = identityEleveInput.value.trim().slice(0, 60);
+      const classeVal = identityClasseField.hidden ? CLASSE : identityClasseInput.value.trim().slice(0, 60);
+      const eleveVal = identityEleveField.hidden ? ELEVE : identityEleveInput.value.trim().slice(0, 60);
       if (!classeVal || !eleveVal) {
-        identityError.textContent = "Indique le code de ta classe et choisis un pseudo pour continuer.";
+        identityError.textContent = identityClasseField.hidden
+          ? "Choisis un pseudo pour continuer."
+          : identityEleveField.hidden
+          ? "Indique le code de ta classe pour continuer."
+          : "Indique le code de ta classe et choisis un pseudo pour continuer.";
         identityError.hidden = false;
         return;
       }

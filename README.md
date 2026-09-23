@@ -66,7 +66,7 @@ http://localhost:3000/?classe=5B&eleve=12
 - `classe` — nom ou code du groupe classe (ex. `5B`, `3eA`…)
 - `eleve` (ou `id`) — un identifiant au choix (numéro de rang, pseudo…), utilisé uniquement pour qu'une nouvelle réponse du même élève **remplace** la précédente au lieu de la dupliquer. Ce n'est pas un nom et il n'est affiché nulle part dans les statistiques.
 
-**Sans ces paramètres dans l'URL**, l'élève arrive sur un petit formulaire qui l'invite à indiquer le code de sa classe et à choisir un pseudo (pas son vrai nom) avant de commencer — ces deux champs sont obligatoires pour continuer. L'information est ensuite mémorisée pour la session du navigateur (elle n'est pas redemandée si l'élève recharge la page) et un badge en haut de page confirme le contexte dans lequel il répond.
+**Pour tout ce que l'URL ne donne pas**, l'élève arrive sur un petit formulaire qui l'invite à le compléter avant de commencer — uniquement les champs manquants (obligatoires pour continuer) : un lien `?classe=5B` seul (le cas le plus courant — un même lien donné à toute la classe) ne redemande que le pseudo, pas le code de classe déjà connu. Sans aucun paramètre, les deux sont demandés. Une fois saisie, l'information est mémorisée pour la session du navigateur (elle n'est pas redemandée si l'élève recharge la page avec le même lien — mais un pseudo mémorisé pour une classe n'est jamais réutilisé pour une autre, si l'élève ouvre un lien différent dans le même navigateur) et un badge en haut de page confirme le contexte dans lequel il répond.
 
 Le tableau de bord (`dashboard.html`) propose un sélecteur pour :
 
