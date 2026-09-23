@@ -80,6 +80,7 @@
 
     <div class="tabs no-print" id="dashboard-tabs" role="tablist">
       <button class="tab-btn is-active" id="tab-btn-stats" data-tab="stats" role="tab" aria-selected="true" aria-controls="tab-panel-stats" type="button">📊 Statistiques</button>
+      <button class="tab-btn" id="tab-btn-compare" data-tab="compare" role="tab" aria-selected="false" aria-controls="tab-panel-compare" type="button">📈 Comparer</button>
       <button class="tab-btn" id="tab-btn-manage" data-tab="manage" role="tab" aria-selected="false" aria-controls="tab-panel-manage" type="button">🧑‍🎓 Gérer la classe</button>
       <button class="tab-btn" id="tab-btn-share" data-tab="share" role="tab" aria-selected="false" aria-controls="tab-panel-share" type="button">🔗 Partager</button>
       <button class="tab-btn" id="tab-btn-account" data-tab="account" role="tab" aria-selected="false" aria-controls="tab-panel-account" type="button">🔑 Compte</button>
@@ -185,6 +186,45 @@
       </div>
     </div>
 
+    <div class="tab-panel" id="tab-panel-compare" role="tabpanel" aria-labelledby="tab-btn-compare" hidden>
+      <div class="card no-print" id="compare-select-card">
+        <h2 class="card-title">Classes à comparer</h2>
+        <p class="card-hint">Coche les classes à inclure dans la comparaison.</p>
+        <div id="compare-class-list" class="manage-list"></div>
+      </div>
+
+      <div id="compare-empty" class="empty-state" hidden>
+        <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 16v10M24 32h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <p id="compare-empty-text">Sélectionne au moins une classe pour voir la comparaison.</p>
+      </div>
+
+      <div id="compare-results" hidden>
+        <div class="card">
+          <h2 class="card-title">Vue d'ensemble de la sélection</h2>
+          <div class="stat-grid">
+            <div class="stat-tile">
+              <p class="stat-tile-value" id="compare-classes-count">–</p>
+              <p class="stat-tile-label">classes sélectionnées</p>
+            </div>
+            <div class="stat-tile">
+              <p class="stat-tile-value" id="compare-total-count">–</p>
+              <p class="stat-tile-label">réponses au total</p>
+            </div>
+            <div class="stat-tile">
+              <p class="stat-tile-value" id="compare-combined-avg">–</p>
+              <p class="stat-tile-label">moyenne combinée (kg/an)</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Moyenne par classe</h2>
+          <div id="compare-chart" class="breakdown-chart"></div>
+          <p class="breakdown-legend"><span class="ref-mark-swatch"></span> Profil de référence, ~229 kg CO<sub>2</sub>e/an</p>
+        </div>
+      </div>
+    </div>
+
     <div class="tab-panel" id="tab-panel-manage" role="tabpanel" aria-labelledby="tab-btn-manage" hidden>
       <div class="card" id="manage-card" hidden>
         <h2 class="card-title">Gérer les élèves de cette classe</h2>
@@ -192,7 +232,11 @@
         <div id="manage-list" class="manage-list"></div>
       </div>
 
-      <button class="btn btn-ghost" id="reset-btn" type="button">↺ Réinitialiser les données de la classe</button>
+      <div class="card no-print" id="delete-classes-card">
+        <h2 class="card-title">Supprimer les données d'une classe</h2>
+        <p class="card-hint">Supprime définitivement les réponses et les élèves associés à une classe. Cette action est irréversible.</p>
+        <div id="delete-classes-list" class="manage-list"></div>
+      </div>
     </div>
 
     <div class="tab-panel" id="tab-panel-share" role="tabpanel" aria-labelledby="tab-btn-share" hidden>
@@ -212,6 +256,15 @@
         </div>
         <p class="link-gen-copied" id="link-gen-copied" hidden>✓ Lien copié !</p>
         <div class="link-gen-qr" id="link-gen-qr" hidden></div>
+      </div>
+
+      <div class="card" id="url-help-card">
+        <h2 class="card-title">Construire le lien soi-même</h2>
+        <p class="card-hint">Le générateur ci-dessus ajoute simplement ces paramètres à l'adresse du calculateur — utile à savoir si tu veux construire un lien à la main :</p>
+        <ul class="tip-list">
+          <li><code>?classe=5B</code> — code de la classe. L'élève choisit son pseudo lui-même en arrivant sur la page.</li>
+          <li><code>?classe=5B&amp;eleve=Loutre</code> — pré-remplit aussi un pseudo précis, si tu veux préparer des liens individuels (facultatif, rarement nécessaire).</li>
+        </ul>
       </div>
     </div>
 
