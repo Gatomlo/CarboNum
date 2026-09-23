@@ -573,6 +573,46 @@
     }
   });
 
+  // ---- Onglets (Statistiques / Gérer la classe / Partager / Compte) ----
+
+  const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
+  const tabPanels = {
+    stats: document.getElementById("tab-panel-stats"),
+    manage: document.getElementById("tab-panel-manage"),
+    share: document.getElementById("tab-panel-share"),
+    account: document.getElementById("tab-panel-account"),
+  };
+
+  function activateTab(name) {
+    if (!tabPanels[name]) return;
+    tabButtons.forEach((btn) => {
+      const active = btn.dataset.tab === name;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    Object.keys(tabPanels).forEach((key) => {
+      tabPanels[key].hidden = key !== name;
+    });
+    try {
+      localStorage.setItem("empreinte-dashboard-tab", name);
+    } catch (e) {
+      /* stockage indisponible : pas bloquant */
+    }
+  }
+
+  tabButtons.forEach((btn) => {
+    btn.addEventListener("click", () => activateTab(btn.dataset.tab));
+  });
+
+  (function restoreTab() {
+    try {
+      const saved = localStorage.getItem("empreinte-dashboard-tab");
+      if (saved) activateTab(saved);
+    } catch (e) {
+      /* stockage indisponible : reste sur l'onglet par défaut */
+    }
+  })();
+
   // ---- Thème clair / sombre (identique au calculateur) ----
 
   const themeToggle = document.getElementById("theme-toggle");

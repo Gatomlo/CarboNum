@@ -503,6 +503,40 @@ input[type="range"]::-moz-range-thumb {
 
 .class-select-field { max-width: 320px; margin-top: 18px; }
 
+/* onglets du tableau de bord */
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 20px 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  margin-bottom: -1px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: .9rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tab-btn:hover { color: var(--ink); }
+.tab-btn.is-active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.tab-panel { display: flex; flex-direction: column; gap: 18px; padding-block: 4px; }
+
 .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .stat-tile { background: var(--surface-2); border-radius: 12px; padding: 16px 10px; text-align: center; }
 .stat-tile-value { font-family: var(--font-mono); font-weight: 700; font-size: 1.4rem; margin: 0; font-variant-numeric: tabular-nums; color: var(--accent); }

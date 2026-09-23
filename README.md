@@ -44,7 +44,16 @@ Une fois connecté·e, la session reste valide 12 h ou jusqu'à la déconnexion 
 
 Sur la page du calculateur, un lien discret « Espace enseignant → » en bas de page mène au tableau de bord.
 
-À la fin du calculateur, **le résultat de chaque élève est transmis automatiquement** — ce n'est pas une action optionnelle : dès que le calcul est terminé, le total et la répartition par usage (avec la classe et le pseudo s'ils sont renseignés, mais jamais les réponses détaillées au questionnaire ni un nom) sont envoyés au serveur, sans que l'élève ait à cliquer sur quoi que ce soit. Un petit message discret confirme la transmission (ou explique qu'elle a échoué si le serveur est inaccessible). Le tableau de bord affiche ensuite en temps réel le nombre de réponses, l'empreinte minimale, maximale et moyenne du groupe, ainsi que le poste (smartphone, streaming, IA…) qui pèse le plus en moyenne. Un bouton permet de réinitialiser les données.
+À la fin du calculateur, **le résultat de chaque élève est transmis automatiquement** — ce n'est pas une action optionnelle : dès que le calcul est terminé, le total et la répartition par usage (avec la classe et le pseudo s'ils sont renseignés, mais jamais les réponses détaillées au questionnaire ni un nom) sont envoyés au serveur, sans que l'élève ait à cliquer sur quoi que ce soit. Un petit message discret confirme la transmission (ou explique qu'elle a échoué si le serveur est inaccessible).
+
+Une fois connecté·e, le contenu du tableau de bord est réparti en quatre onglets (le choix de l'onglet actif est mémorisé d'une visite à l'autre) :
+
+- **📊 Statistiques** — nombre de réponses, empreinte minimale/maximale/moyenne du groupe, jauge et répartition par usage, avec impression et export CSV.
+- **🧑‍🎓 Gérer la classe** — inclusion/exclusion des élèves, réinitialisation des données.
+- **🔗 Partager** — générateur de lien de classe et son QR code.
+- **🔑 Compte** — changer le mot de passe.
+
+Le sélecteur de classe et le mode projection restent au-dessus des onglets, puisqu'ils s'appliquent aux deux premiers.
 
 #### Plusieurs classes en parallèle
 

@@ -77,116 +77,131 @@
       <button class="btn btn-ghost btn-sm no-print" id="projection-btn" type="button">🖥️ Mode projection</button>
     </div>
 
-    <div class="card link-gen-card no-print" id="link-gen-card">
-      <h2 class="card-title">Créer un lien pour une classe</h2>
-      <p class="card-hint">Indique un code de classe pour générer le lien à donner à tes élèves.</p>
-      <form class="link-gen-row" id="link-gen-form">
-        <label class="field">
-          <span>Code de la classe</span>
-          <input type="text" id="link-gen-classe" maxlength="60" placeholder="ex. 5B" autocomplete="off" required>
-        </label>
-        <button class="btn btn-primary btn-sm" type="submit">Générer</button>
-      </form>
-      <div class="link-gen-output" id="link-gen-output" hidden>
-        <input type="text" id="link-gen-url" readonly aria-label="Lien à partager">
-        <button class="btn btn-ghost btn-sm" id="link-gen-copy" type="button">Copier</button>
-      </div>
-      <p class="link-gen-copied" id="link-gen-copied" hidden>✓ Lien copié !</p>
-      <div class="link-gen-qr" id="link-gen-qr" hidden></div>
+    <div class="tabs no-print" id="dashboard-tabs" role="tablist">
+      <button class="tab-btn is-active" id="tab-btn-stats" data-tab="stats" role="tab" aria-selected="true" aria-controls="tab-panel-stats" type="button">📊 Statistiques</button>
+      <button class="tab-btn" id="tab-btn-manage" data-tab="manage" role="tab" aria-selected="false" aria-controls="tab-panel-manage" type="button">🧑‍🎓 Gérer la classe</button>
+      <button class="tab-btn" id="tab-btn-share" data-tab="share" role="tab" aria-selected="false" aria-controls="tab-panel-share" type="button">🔗 Partager</button>
+      <button class="tab-btn" id="tab-btn-account" data-tab="account" role="tab" aria-selected="false" aria-controls="tab-panel-account" type="button">🔑 Compte</button>
     </div>
 
-    <div class="card no-print" id="change-pw-card">
-      <h2 class="card-title">Changer le mot de passe</h2>
-      <p class="card-hint" id="change-pw-hint">Le nouveau mot de passe s'applique à la prochaine connexion (la session en cours reste active).</p>
-      <form id="change-pw-form">
-        <label class="field">
-          <span>Nouveau mot de passe</span>
-          <input type="password" id="change-pw-new" autocomplete="new-password" minlength="8" required>
-        </label>
-        <label class="field">
-          <span>Confirme le mot de passe</span>
-          <input type="password" id="change-pw-confirm" autocomplete="new-password" minlength="8" required>
-        </label>
-        <button class="btn btn-ghost btn-sm" type="submit">Mettre à jour</button>
-        <p class="identity-error" id="change-pw-error" hidden></p>
-        <p class="link-gen-copied" id="change-pw-success" hidden>✓ Mot de passe mis à jour.</p>
-      </form>
-    </div>
-
-    <div id="loading-state" class="empty-state">
+    <div id="loading-state" class="empty-state no-print">
       <p>Chargement…</p>
     </div>
 
-    <div id="error-state" class="error-state" hidden>
+    <div id="error-state" class="error-state no-print" hidden>
       <p>Impossible de récupérer les statistiques. Ce tableau de bord nécessite que le site soit lancé avec le serveur Node inclus (voir le README du projet).</p>
     </div>
 
-    <div id="content-block" class="results" hidden>
+    <div class="tab-panel is-active" id="tab-panel-stats" role="tabpanel" aria-labelledby="tab-btn-stats">
+      <div id="content-block" class="results" hidden>
 
-      <div id="no-data-note" class="empty-state" hidden>
-      <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 16v10M24 32h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      <p id="no-data-text">Aucune réponse comptabilisée pour l'instant.<br>Demande à tes élèves de calculer leur empreinte et de cliquer sur « Partager mon résultat » à la fin.</p>
-    </div>
-
-    <div id="stats-cards" hidden>
-      <div class="report-actions no-print">
-        <button class="btn btn-ghost btn-sm" id="dashboard-print-btn" type="button">🖨️ Imprimer ce rapport</button>
-        <button class="btn btn-ghost btn-sm" id="export-csv-btn" type="button">⬇ Exporter en CSV</button>
+        <div id="no-data-note" class="empty-state" hidden>
+        <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 16v10M24 32h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <p id="no-data-text">Aucune réponse comptabilisée pour l'instant.<br>Demande à tes élèves de calculer leur empreinte et de cliquer sur « Partager mon résultat » à la fin.</p>
       </div>
-      <div class="card">
-        <h2 class="card-title">Vue d'ensemble</h2>
-        <div class="stat-grid">
-          <div class="stat-tile">
-            <p class="stat-tile-value" id="stat-count">–</p>
-            <p class="stat-tile-label">réponses</p>
+
+      <div id="stats-cards" hidden>
+        <div class="report-actions no-print">
+          <button class="btn btn-ghost btn-sm" id="dashboard-print-btn" type="button">🖨️ Imprimer ce rapport</button>
+          <button class="btn btn-ghost btn-sm" id="export-csv-btn" type="button">⬇ Exporter en CSV</button>
+        </div>
+        <div class="card">
+          <h2 class="card-title">Vue d'ensemble</h2>
+          <div class="stat-grid">
+            <div class="stat-tile">
+              <p class="stat-tile-value" id="stat-count">–</p>
+              <p class="stat-tile-label">réponses</p>
+            </div>
+            <div class="stat-tile">
+              <p class="stat-tile-value" id="stat-min">–</p>
+              <p class="stat-tile-label">empreinte minimale (kg/an)</p>
+            </div>
+            <div class="stat-tile">
+              <p class="stat-tile-value" id="stat-max">–</p>
+              <p class="stat-tile-label">empreinte maximale (kg/an)</p>
+            </div>
+            <div class="stat-tile">
+              <p class="stat-tile-value" id="stat-avg">–</p>
+              <p class="stat-tile-label">moyenne de classe (kg/an)</p>
+            </div>
           </div>
-          <div class="stat-tile">
-            <p class="stat-tile-value" id="stat-min">–</p>
-            <p class="stat-tile-label">empreinte minimale (kg/an)</p>
-          </div>
-          <div class="stat-tile">
-            <p class="stat-tile-value" id="stat-max">–</p>
-            <p class="stat-tile-label">empreinte maximale (kg/an)</p>
-          </div>
-          <div class="stat-tile">
-            <p class="stat-tile-value" id="stat-avg">–</p>
-            <p class="stat-tile-label">moyenne de classe (kg/an)</p>
+          <p class="context-line" id="avg-context" style="margin-top:14px;"></p>
+        </div>
+
+        <div class="card gauge-card">
+          <h2 class="card-title">La classe, en moyenne</h2>
+          <svg id="gauge-svg" viewBox="0 0 200 118" class="gauge">
+            <path id="gauge-band-good" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+            <path id="gauge-band-warn" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+            <path id="gauge-band-crit" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
+            <g id="gauge-ref-marker"></g>
+            <line id="gauge-needle" x1="100" y1="100" x2="100" y2="30" class="gauge-needle"/>
+            <circle cx="100" cy="100" r="5" class="gauge-hub"/>
+          </svg>
+          <p class="gauge-ref-label">▲ Repère : profil de référence — usage numérique moyen sur les mêmes catégories que ce quiz, environ 229 kg CO<sub>2</sub>e/an</p>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Ce qui pèse le plus, en moyenne</h2>
+          <div id="dashboard-chart" class="breakdown-chart"></div>
+          <p class="breakdown-legend"><span class="ref-mark-swatch"></span> Profil de référence, poste par poste (même profil moyen que sur la jauge)</p>
+          <div class="dominant-callout">
+            <span class="swatch" id="dominant-swatch"></span>
+            <span id="dominant-text"></span>
           </div>
         </div>
-        <p class="context-line" id="avg-context" style="margin-top:14px;"></p>
+      </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-panel-manage" role="tabpanel" aria-labelledby="tab-btn-manage" hidden>
+      <div class="card" id="manage-card" hidden>
+        <h2 class="card-title">Gérer les élèves de cette classe</h2>
+        <p class="card-hint">Décoche un·e élève pour exclure sa réponse du calcul des statistiques (utile pour un test ou une réponse manifestement erronée). Son entrée reste enregistrée, juste ignorée dans les chiffres ci-dessus.</p>
+        <div id="manage-list" class="manage-list"></div>
       </div>
 
-      <div class="card gauge-card">
-        <h2 class="card-title">La classe, en moyenne</h2>
-        <svg id="gauge-svg" viewBox="0 0 200 118" class="gauge">
-          <path id="gauge-band-good" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
-          <path id="gauge-band-warn" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
-          <path id="gauge-band-crit" class="gauge-band" fill="none" stroke-width="16" stroke-linecap="butt"/>
-          <g id="gauge-ref-marker"></g>
-          <line id="gauge-needle" x1="100" y1="100" x2="100" y2="30" class="gauge-needle"/>
-          <circle cx="100" cy="100" r="5" class="gauge-hub"/>
-        </svg>
-        <p class="gauge-ref-label">▲ Repère : profil de référence — usage numérique moyen sur les mêmes catégories que ce quiz, environ 229 kg CO<sub>2</sub>e/an</p>
-      </div>
+      <button class="btn btn-ghost" id="reset-btn" type="button">↺ Réinitialiser les données de la classe</button>
+    </div>
 
-      <div class="card">
-        <h2 class="card-title">Ce qui pèse le plus, en moyenne</h2>
-        <div id="dashboard-chart" class="breakdown-chart"></div>
-        <p class="breakdown-legend"><span class="ref-mark-swatch"></span> Profil de référence, poste par poste (même profil moyen que sur la jauge)</p>
-        <div class="dominant-callout">
-          <span class="swatch" id="dominant-swatch"></span>
-          <span id="dominant-text"></span>
+    <div class="tab-panel" id="tab-panel-share" role="tabpanel" aria-labelledby="tab-btn-share" hidden>
+      <div class="card link-gen-card" id="link-gen-card">
+        <h2 class="card-title">Créer un lien pour une classe</h2>
+        <p class="card-hint">Indique un code de classe pour générer le lien à donner à tes élèves.</p>
+        <form class="link-gen-row" id="link-gen-form">
+          <label class="field">
+            <span>Code de la classe</span>
+            <input type="text" id="link-gen-classe" maxlength="60" placeholder="ex. 5B" autocomplete="off" required>
+          </label>
+          <button class="btn btn-primary btn-sm" type="submit">Générer</button>
+        </form>
+        <div class="link-gen-output" id="link-gen-output" hidden>
+          <input type="text" id="link-gen-url" readonly aria-label="Lien à partager">
+          <button class="btn btn-ghost btn-sm" id="link-gen-copy" type="button">Copier</button>
         </div>
+        <p class="link-gen-copied" id="link-gen-copied" hidden>✓ Lien copié !</p>
+        <div class="link-gen-qr" id="link-gen-qr" hidden></div>
       </div>
     </div>
 
-    <div class="card no-print" id="manage-card" hidden>
-      <h2 class="card-title">Gérer les élèves de cette classe</h2>
-      <p class="card-hint">Décoche un·e élève pour exclure sa réponse du calcul des statistiques (utile pour un test ou une réponse manifestement erronée). Son entrée reste enregistrée, juste ignorée dans les chiffres ci-dessus.</p>
-      <div id="manage-list" class="manage-list"></div>
-    </div>
-
-    <button class="btn btn-ghost no-print" id="reset-btn" type="button">↺ Réinitialiser les données de la classe</button>
+    <div class="tab-panel" id="tab-panel-account" role="tabpanel" aria-labelledby="tab-btn-account" hidden>
+      <div class="card" id="change-pw-card">
+        <h2 class="card-title">Changer le mot de passe</h2>
+        <p class="card-hint" id="change-pw-hint">Le nouveau mot de passe s'applique à la prochaine connexion (la session en cours reste active).</p>
+        <form id="change-pw-form">
+          <label class="field">
+            <span>Nouveau mot de passe</span>
+            <input type="password" id="change-pw-new" autocomplete="new-password" minlength="8" required>
+          </label>
+          <label class="field">
+            <span>Confirme le mot de passe</span>
+            <input type="password" id="change-pw-confirm" autocomplete="new-password" minlength="8" required>
+          </label>
+          <button class="btn btn-ghost btn-sm" type="submit">Mettre à jour</button>
+          <p class="identity-error" id="change-pw-error" hidden></p>
+          <p class="link-gen-copied" id="change-pw-success" hidden>✓ Mot de passe mis à jour.</p>
+        </form>
+      </div>
     </div>
   </div>
 
