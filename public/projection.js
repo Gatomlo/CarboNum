@@ -33,6 +33,65 @@
   const contentEl = document.getElementById("proj-content");
   const updatedEl = document.getElementById("proj-updated");
 
+  // ---- Bascule moyenne / total sur les équivalences (avion, voiture,
+  // bouteilles, forêt) — même bascule et même préférence (localStorage)
+  // que le tableau de bord ; la jauge et la répartition par usage
+  // restent "moyenne" (comparées au profil de référence, lui-même une
+  // moyenne).
+
+  const equivCardTitle = document.getElementById("equiv-card-title");
+  const equivViewAvgBtn = document.getElementById("equiv-view-avg");
+  const equivViewTotalBtn = document.getElementById("equiv-view-total");
+
+  let equivView = "avg";
+  try {
+    const saved = localStorage.getItem("empreinte-equiv-view");
+    if (saved === "avg" || saved === "total") equivView = saved;
+  } catch (e) {
+    /* stockage indisponible : reste sur "avg" */
+  }
+
+  let equivStats = null; // { avg, count } de la dernière réponse /api/stats
+
+  function renderEquivCard() {
+    if (!equivStats) return;
+    const value = equivView === "total" ? equivStats.avg * equivStats.count : equivStats.avg;
+    equivCardTitle.textContent =
+      equivView === "total"
+        ? "Ça représente quoi, au total pour tous les participants sur une année ?"
+        : "Ça représente quoi, en moyenne par élève sur une année ?";
+    renderEquivalencesInto(
+      {
+        avionKm: document.getElementById("proj-eq-avion-km"),
+        avionSub: document.getElementById("proj-eq-avion-sub"),
+        voitureKm: document.getElementById("proj-eq-voiture-km"),
+        voitureSub: document.getElementById("proj-eq-voiture-sub"),
+        bouteilles: document.getElementById("proj-eq-bouteilles"),
+        bouteillesSub: document.getElementById("proj-eq-bouteilles-sub"),
+        foret: document.getElementById("proj-eq-foret"),
+        foretSub: document.getElementById("proj-eq-foret-sub"),
+      },
+      value
+    );
+  }
+
+  function setEquivView(view) {
+    equivView = view;
+    equivViewAvgBtn.classList.toggle("is-active", view === "avg");
+    equivViewTotalBtn.classList.toggle("is-active", view === "total");
+    try {
+      localStorage.setItem("empreinte-equiv-view", view);
+    } catch (e) {
+      /* stockage indisponible : pas bloquant */
+    }
+    renderEquivCard();
+  }
+
+  equivViewAvgBtn.classList.toggle("is-active", equivView === "avg");
+  equivViewTotalBtn.classList.toggle("is-active", equivView === "total");
+  equivViewAvgBtn.addEventListener("click", () => setEquivView("avg"));
+  equivViewTotalBtn.addEventListener("click", () => setEquivView("total"));
+
   document.getElementById("proj-title").textContent =
     classesList.length === 1
       ? `Classe ${classesList[0]}`
@@ -141,19 +200,8 @@
 
     renderBreakdownInto(document.getElementById("proj-chart"), stats.avgByCategory);
 
-    renderEquivalencesInto(
-      {
-        avionKm: document.getElementById("proj-eq-avion-km"),
-        avionSub: document.getElementById("proj-eq-avion-sub"),
-        voitureKm: document.getElementById("proj-eq-voiture-km"),
-        voitureSub: document.getElementById("proj-eq-voiture-sub"),
-        bouteilles: document.getElementById("proj-eq-bouteilles"),
-        bouteillesSub: document.getElementById("proj-eq-bouteilles-sub"),
-        foret: document.getElementById("proj-eq-foret"),
-        foretSub: document.getElementById("proj-eq-foret-sub"),
-      },
-      stats.avg
-    );
+    equivStats = { avg: stats.avg, count: stats.count };
+    renderEquivCard();
   }
 
   let refreshTimer = null;

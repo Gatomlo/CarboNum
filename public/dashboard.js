@@ -460,6 +460,66 @@
     return entries[0];
   }
 
+  // ---- Bascule moyenne / total sur les équivalences (avion, voiture,
+  // bouteilles, forêt) : la jauge et la répartition par usage restent
+  // toujours "moyenne" (elles se comparent au profil de référence, qui
+  // est lui-même une moyenne), mais les équivalences concrètes ont du
+  // sens dans les deux lectures — l'empreinte moyenne d'un·e élève, ou
+  // l'empreinte cumulée de tous les participants comptabilisés.
+
+  const equivCardTitle = document.getElementById("equiv-card-title");
+  const equivViewAvgBtn = document.getElementById("equiv-view-avg");
+  const equivViewTotalBtn = document.getElementById("equiv-view-total");
+
+  let equivView = "avg";
+  try {
+    const saved = localStorage.getItem("empreinte-equiv-view");
+    if (saved === "avg" || saved === "total") equivView = saved;
+  } catch (e) {
+    /* stockage indisponible : reste sur "avg" */
+  }
+
+  let equivStats = null; // { avg, count } de la dernière réponse /api/stats
+
+  function renderEquivCard() {
+    if (!equivStats) return;
+    const value = equivView === "total" ? equivStats.avg * equivStats.count : equivStats.avg;
+    equivCardTitle.textContent =
+      equivView === "total"
+        ? "Ça représente quoi, au total pour tous les participants sur une année ?"
+        : "Ça représente quoi, en moyenne par élève sur une année ?";
+    renderEquivalencesInto(
+      {
+        avionKm: document.getElementById("dash-eq-avion-km"),
+        avionSub: document.getElementById("dash-eq-avion-sub"),
+        voitureKm: document.getElementById("dash-eq-voiture-km"),
+        voitureSub: document.getElementById("dash-eq-voiture-sub"),
+        bouteilles: document.getElementById("dash-eq-bouteilles"),
+        bouteillesSub: document.getElementById("dash-eq-bouteilles-sub"),
+        foret: document.getElementById("dash-eq-foret"),
+        foretSub: document.getElementById("dash-eq-foret-sub"),
+      },
+      value
+    );
+  }
+
+  function setEquivView(view) {
+    equivView = view;
+    equivViewAvgBtn.classList.toggle("is-active", view === "avg");
+    equivViewTotalBtn.classList.toggle("is-active", view === "total");
+    try {
+      localStorage.setItem("empreinte-equiv-view", view);
+    } catch (e) {
+      /* stockage indisponible : pas bloquant */
+    }
+    renderEquivCard();
+  }
+
+  equivViewAvgBtn.classList.toggle("is-active", equivView === "avg");
+  equivViewTotalBtn.classList.toggle("is-active", equivView === "total");
+  equivViewAvgBtn.addEventListener("click", () => setEquivView("avg"));
+  equivViewTotalBtn.addEventListener("click", () => setEquivView("total"));
+
   // ---- Politique de réponse d'une classe (unique ou multiple) et
   // déblocages (classe entière ou élève par élève) ----
 
@@ -768,19 +828,8 @@
       document.getElementById("dominant-swatch").style.background = top.color;
       document.getElementById("dominant-text").innerHTML = `En moyenne, c'est <strong>${top.article}</strong> qui pèse le plus dans l'empreinte du groupe (~${fmt(top.value, 0)} kg CO2e/an, soit environ ${fmt(pctOfAvg, 0)} % de l'empreinte moyenne).`;
 
-      renderEquivalencesInto(
-        {
-          avionKm: document.getElementById("dash-eq-avion-km"),
-          avionSub: document.getElementById("dash-eq-avion-sub"),
-          voitureKm: document.getElementById("dash-eq-voiture-km"),
-          voitureSub: document.getElementById("dash-eq-voiture-sub"),
-          bouteilles: document.getElementById("dash-eq-bouteilles"),
-          bouteillesSub: document.getElementById("dash-eq-bouteilles-sub"),
-          foret: document.getElementById("dash-eq-foret"),
-          foretSub: document.getElementById("dash-eq-foret-sub"),
-        },
-        stats.avg
-      );
+      equivStats = { avg: stats.avg, count: stats.count };
+      renderEquivCard();
     }
 
   }

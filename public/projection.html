@@ -85,7 +85,13 @@
       </div>
 
       <div class="card">
-        <h2 class="card-title">Ça représente quoi, en moyenne sur une année&nbsp;?</h2>
+        <div class="equiv-card-header">
+          <h2 class="card-title" id="equiv-card-title">Ça représente quoi, en moyenne par élève sur une année&nbsp;?</h2>
+          <div class="view-toggle" id="equiv-view-toggle" role="group" aria-label="Moyenne par élève ou total pour tous les participants">
+            <button class="view-toggle-btn is-active" id="equiv-view-avg" type="button" data-view="avg">Par élève</button>
+            <button class="view-toggle-btn" id="equiv-view-total" type="button" data-view="total">Total classe</button>
+          </div>
+        </div>
         <div class="equiv-grid">
           <div class="equiv-card">
             <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 26 L26 16 L42 8 L36 22 L26 26 L22 36 L18 30 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
