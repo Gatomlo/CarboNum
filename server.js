@@ -1,8 +1,8 @@
 // Sert l'application statique (public/) et expose une API minimale pour
-// les statistiques de classe (stockage JSON local, données anonymes
-// uniquement — aucun nom, aucune adresse IP stockée). "classe" et
-// "eleve" sont des libellés libres passés en paramètre d'URL par
-// l'enseignant·e (ex. ?classe=5B&eleve=12), pas des données d'identité.
+// les statistiques de classe (stockage JSON local — aucun nom, aucune
+// adresse IP stockée). "classe" et "eleve" sont des libellés libres
+// passés en paramètre d'URL par l'enseignant·e (ex. ?classe=5B&eleve=12),
+// pas des données d'identité.
 //
 // Ce module exporte l'app Express (module.exports = app) plutôt que
 // d'appeler app.listen() inconditionnellement, pour pouvoir être monté

@@ -5,7 +5,7 @@
    Écran "setup" tant qu'aucun mot de passe n'a encore été défini,
    écran de connexion ensuite tant qu'aucune session valide n'existe —
    toutes les routes de données répondent 401 sans elle. Affiche
-   ensuite les statistiques agrégées et anonymes récupérées via l'API
+   ensuite les statistiques agrégées récupérées via l'API
    du serveur Node (server.js). N'a aucun effet en hébergement statique
    (GitHub Pages…) : l'écran de connexion l'indique dès la tentative.
 
