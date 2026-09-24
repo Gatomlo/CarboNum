@@ -351,6 +351,15 @@
           <p>C'est un point de comparaison cohérent avec ce que l'application mesure, pas une mesure officielle de l'empreinte numérique moyenne en Belgique. Le détail du calcul est documenté dans le code source (<code>shared.js</code>, à côté de <code>REFERENCE_MOYENNE_BE</code>).</p>
         </div>
       </div>
+
+      <div class="card">
+        <h2 class="card-title">Et la fabrication de cet outil, quel a été son impact&nbsp;?</h2>
+        <div class="methodology-body">
+          <p>Cette application a été construite avec l'assistance d'une IA générative (Claude, Anthropic) : chaque échange pendant son développement a lui-même un coût énergétique. Pour l'estimer sans inventer de chiffre, la méthode utilisée est celle de l'étude <a href="https://arxiv.org/abs/2505.09598" target="_blank" rel="noopener">« How Hungry is AI? » (Jegham et al., 2025)</a>, reprise par l'outil open source <a href="https://github.com/gwittebolle/claude-carbon" target="_blank" rel="noopener">claude-carbon</a> : elle convertit les tokens réellement consommés (mesurés dans le journal de la conversation de développement) en gCO<sub>2</sub>e, à partir de mesures publiées de consommation électrique par requête et du mix électrique moyen des centres de données concernés.</p>
+          <p>Appliquée à l'intégralité de la conversation ayant servi à construire et faire évoluer cette application (premier message inclus), l'estimation obtenue est d'environ <strong>2,75 kg CO<sub>2</sub>e</strong> — soit à peu près l'équivalent de 19 km en voiture (142 gCO<sub>2</sub>e/km, ADEME 2025) ou 790 km en TGV (3,5 gCO<sub>2</sub>e/km, SNCF 2024).</p>
+          <p>Ce chiffre ne couvre que le calcul du modèle d'IA lui-même. Il exclut le fonctionnement de l'environnement de développement (serveur relancé à répétition, tests automatisés), l'appareil utilisé pour la conversation, et l'hébergement de l'application une fois déployée. Comme le reste de cette page, c'est un <strong>ordre de grandeur</strong>, pas une mesure de précision — la méthode elle-même le précise (coefficients extrapolés à partir d'un nombre limité de mesures publiées).</p>
+        </div>
+      </div>
     </div>
   </div>
 
