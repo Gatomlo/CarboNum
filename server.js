@@ -19,6 +19,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const express = require("express");
 const db = require("./db");
+const gatewayBridge = require("./gateway-bridge");
 const { hashPassword, verifyPassword } = require("./password-hash");
 
 // Petit chargeur de .env local (facultatif) — évite une dépendance
@@ -123,9 +124,19 @@ function isValidSession(token) {
   return true;
 }
 
+// Connexion centralisee de node-gateway : si la passerelle fournit req.gateway avec le droit « admin » sur cet
+// outil, la requete est authentifiee comme administrateur. Aucune session n'est creee : la passerelle est
+// interrogee a chaque requete (deconnexion ou droit retire la-bas => acces coupe aussitot). Sans effet hors passerelle.
+function isGatewayAdmin(req) {
+  return !!gatewayBridge.identity(req, "admin");
+}
+
+function isAdminRequest(req) {
+  return isGatewayAdmin(req) || isValidSession(parseCookies(req)[SESSION_COOKIE]);
+}
+
 function requireAdmin(req, res, next) {
-  const token = parseCookies(req)[SESSION_COOKIE];
-  if (!isValidSession(token)) {
+  if (!isAdminRequest(req)) {
     return res.status(401).json({ error: "non authentifié" });
   }
   next();
@@ -173,8 +184,8 @@ app.post("/api/admin/logout", (req, res) => {
 });
 
 app.get("/api/admin/session", (req, res) => {
-  const token = parseCookies(req)[SESSION_COOKIE];
-  res.json({ authenticated: isValidSession(token), configured: isPasswordConfigured() });
+  const viaGateway = isGatewayAdmin(req);
+  res.json({ authenticated: isAdminRequest(req), configured: isPasswordConfigured() || viaGateway });
 });
 
 // Définit le mot de passe administrateur la toute première fois — sans

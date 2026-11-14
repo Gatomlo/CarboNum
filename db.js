@@ -17,7 +17,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const DB_PATH = path.join(__dirname, "empreinte.json");
+const DB_PATH = process.env.CARBONUM_DB_PATH || path.join(__dirname, "empreinte.json"); // surcharge : essais automatiques
 
 function load() {
   try {

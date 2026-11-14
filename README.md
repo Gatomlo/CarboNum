@@ -159,3 +159,7 @@ Ils ne remplacent pas un bilan carbone individuel précis, mais permettent de co
 - `db.js` — stockage JSON local (`empreinte.json`, créé à la racine, hors de `public/`), sans dépendance native
 - `password-hash.js` — hachage/vérification du mot de passe administrateur (scrypt, intégré à Node), stocké via `db.js`
 - `package.json` — dépendances (`express` uniquement), `npm start` lance `server.js`
+
+## Connexion centralisée (node-gateway)
+
+Monté derrière node-gateway, l'outil accepte l'identité fournie par la passerelle : si `req.gateway.role` vaut `admin` pour cet outil, la requête est authentifiée comme administrateur (`isGatewayAdmin` dans `server.js`, copie de `node-gateway/docs/gateway-bridge.js` dans `gateway-bridge.js`). Aucune session n'est créée : la passerelle est interrogée à chaque requête, donc un accès retiré ou une déconnexion là-bas coupe l'accès ici aussitôt. Un simple « membre » n'obtient rien. Le mot de passe local reste valable. Hors passerelle : sans effet. Essais : `npm test` (`CARBONUM_DB_PATH` déplace `empreinte.json`).
