@@ -144,15 +144,22 @@ function requireAdmin(req, res, next) {
 
 // Ouvre une session admin (cookie) : factorisé, utilisé après une
 // connexion réussie comme après la définition initiale du mot de passe.
+// Chemin du cookie : le montage de l'outil (/carbonum/ sous la passerelle, / seul), pour ne pas etre envoye aux
+// autres outils. Secure des que la connexion est en HTTPS (derriere le proxy de l'hebergeur aussi).
+function cookiePath(req) {
+  const mount = req.app && typeof req.app.mountpath === "string" && req.app.mountpath !== "/" ? req.app.mountpath : "";
+  return mount + "/";
+}
 function openAdminSession(req, res) {
   const token = crypto.randomBytes(24).toString("hex");
   sessions.set(token, Date.now() + SESSION_TTL_MS);
+  const https = req.secure || String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim() === "https";
   res.cookie(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: req.secure,
+    secure: https,
     maxAge: SESSION_TTL_MS,
-    path: "/",
+    path: cookiePath(req),
   });
 }
 
@@ -179,7 +186,7 @@ app.post("/api/admin/login", (req, res) => {
 app.post("/api/admin/logout", (req, res) => {
   const token = parseCookies(req)[SESSION_COOKIE];
   if (token) sessions.delete(token);
-  res.clearCookie(SESSION_COOKIE, { path: "/" });
+  res.clearCookie(SESSION_COOKIE, { path: cookiePath(req) });
   res.json({ ok: true });
 });
 
@@ -196,6 +203,10 @@ app.get("/api/admin/session", (req, res) => {
 // fenêtre d'exposition que ça implique tant que le mot de passe n'a pas
 // encore été défini.
 app.post("/api/admin/setup", (req, res) => {
+  // Derriere node-gateway, c'est elle qui authentifie : le premier visiteur ne peut plus s'approprier l'outil.
+  if (gatewayBridge.behindGateway(req) && !isGatewayAdmin(req)) {
+    return res.status(403).json({ error: "Connectez-vous à la passerelle avec un compte ayant le droit admin pour définir le mot de passe." });
+  }
   if (isPasswordConfigured()) {
     return res.status(409).json({ error: "Un mot de passe est déjà configuré." });
   }

@@ -47,8 +47,19 @@ test("un simple membre, un anonyme ou un droit nul n'obtiennent rien", async () 
   }
 });
 
-test("mot de passe local inchange : definition puis connexion", async () => {
-  let r = await fetch(base + "/api/admin/setup", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ password: "motdepasse-solide" }) });
+test("creation du mot de passe : refusee au premier visiteur derriere la passerelle, permise a son admin", async () => {
+  const setup = (h) => fetch(base + "/api/admin/setup", { method: "POST", headers: { "content-type": "application/json", ...h }, body: JSON.stringify({ password: "motdepasse-solide" }) });
+  // derriere la passerelle (req.gateway present) mais anonyme / simple membre : 403, rien n'est cree
+  const anon = { "x-test-gateway": JSON.stringify({ app: "carbonum", role: null, user: null }) };
+  assert.equal((await setup(anon)).status, 403);
+  assert.equal((await setup(gw("member"))).status, 403);
+  assert.equal((await (await get("/api/admin/session")).json()).configured, false);
+  assert.equal((await setup(gw("admin"))).status, 200, "l'admin de la passerelle peut le definir");
+});
+
+test("mot de passe local inchange : connexion et cookie limite au montage", async () => {
+  let r = await fetch(base + "/api/admin/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ password: "motdepasse-solide" }) });
+  assert.match(r.headers.get("set-cookie"), /Path=\/carbonum\//);
   assert.equal(r.status, 200);
   const cookie = r.headers.get("set-cookie").split(";")[0];
   assert.equal((await get("/api/classes", { cookie })).status, 200);
